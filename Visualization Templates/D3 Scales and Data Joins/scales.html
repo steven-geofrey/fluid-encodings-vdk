@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://d3js.org/d3.v7.min.js"></script>
+        <script>
+
+            /* INTRODUCING SCALES: See more at https://github.com/d3/d3-scale */
+
+
+
+            /* LINEAR SCALES
+
+            A linear scale maps a CONTINUOUS domain of values
+            to a CONTINUOUS range of values.
+
+            The pattern for constructing a linear scale is:
+
+            d3.scaleLinear()
+                .domain([DOMAIN_MIN, DOMAIN_MAX])
+                .range([RANGE_MIN, RANGE_MAX]);
+
+            In the domain, `DOMAIN_MIN` and `DOMAIN_MAX`
+            are the smallest and largest values in the original
+            variable being mapped, respectively. These min
+            and max values are supplied as an array of values.
+
+            In the range, `RANGE_MIN` and `RANGE_MAX`
+            are the smallest and largest values that the values
+            in the domain are being mapped to.
+
+            d3.scaleLinear() creates a function for us.
+
+            When we pass `DOMAIN_MIN` into the function, it will
+            return to us the value `RANGE_MIN`.
+
+            When we pass `DOMAIN_MAX` into the function, it will
+            return to us the value `RANGE_MAX`.
+
+            If we pass any other value in between `DOMAIN_MIN` and
+            `DOMAIN_MAX`, we will get the corresponding value
+            in between `RANGE_MIN` and `RANGE_MAX`.
+
+
+            EXPERIMENTS TO TEST:
+            What happens if you lengthen the domain?
+            What happens if you shorten the range?
+
+            */
+
+            let linear = d3.scaleLinear()
+                .domain([0, 100])
+                .range([0, 1000]);
+
+            let min = `When we pass the value 0 into the linear scale, we get the value ${linear(0)} back`;
+            let midpoint = `When we pass the value 50 into the linear scale, we get the value ${linear(50)} back`;
+            let max = `When we pass the value 100 into the linear scale, we get the value ${linear(100)} back`;
+            console.log(min);
+            console.log(midpoint);
+            console.log(max);
+
+
+
+            
+            /* BAND SCALES
+
+            A band scale maps a DISCRETE domain of values
+            to a CONTINUOUS range of values.
+
+            The pattern for constructing a band scale is:
+
+            d3.scaleBand()
+                .domain([A, B, C, D, ...])
+                .range([RANGE_MIN, RANGE_MAX]);
+
+            In the domain, the values A, B, C, D, etc. are discrete
+            values of a variable that we want to map to a continuous
+            output range. We supply the discrete values as an array.
+
+            In the range, `RANGE_MIN` and `RANGE_MAX`
+            are the smallest and largest values that the values
+            in the domain are being mapped to.
+
+            d3.scaleBand() creates a function for us.
+
+            The distance defined by .range() is divided into
+            equal segments of equal length.
+
+            The number of segments is determined by the number
+            of values in the .domain().
+
+            When we pass the FIRST value in .domain() into the function,
+            we get back the position of the FIRST segment in .range().
+
+            When we pass the SECOND value in .domain() into the function,
+            we get back the position of the SECOND segment in .range().
+
+            The rest of the segments follow suit.
+
+
+            EXPERIMENTS TO TEST:
+
+            What happens if you add more values to the array of the domain?
+            What happens if you change the minimum and maximum values
+            of the range?
+            What happens if you pass in a value that isn't in the domain?
+
+            */
+
+
+            let band = d3.scaleBand()
+                .domain(['A', 'B', 'C', 'D', 'E'])
+                .range([0, 100]);
+
+            min = `When we pass the value 'A' into the band scale, we get the value ${band('A')} back`;
+            midpoint = `When we pass the value 'C' into the band scale, we get the value ${band('E')} back`;
+            max = `When we pass the value 'E' into the band scale, we get the value ${band('E')} back`;
+            console.log(min);
+            console.log(midpoint);
+            console.log(max);
+
+
+            /* ORDINAL SCALES
+
+            An ordinal scale maps a DISCRETE domain of values
+            to a DISCRETE range of values.
+
+            The pattern for constructing an ordinal scale is:
+
+            d3.scaleOrdinal()
+                .domain([A1, B1, C1, D1, ...])
+                .range([A2, B2, C2, D2, ...]);
+
+            In the domain, the values A1, B1, C1, D1, etc. are discrete
+            values of a variable that we want to map to a discrete
+            output range. We supply the discrete values as an array.
+
+            In the range, the values A2, B2, C2, D3, etc. are discrete
+            values that the values in the domain are being mapped to.
+            We supply the discrete values as an array.
+
+            The number is values in the domain must equal the number
+            of values in the range.
+
+            d3.scaleOrdinal() creates a function for us.
+
+            Each value in the domain is mapped to the corresponding
+            value in the range, in the order of position.
+
+            When we pass the FIRST value in .domain() into the function,
+            we get back the FIRST value in .range().
+
+            When we pass the SECOND value in .domain() into the function,
+            we get back the SECOND value in .range().
+
+            The rest of the segments follow suit.
+
+
+            EXPERIMENTS TO TEST:
+
+            What happens if you add more values to the array of the domain?
+            What happens if you change the order of values in the range?
+            What happens if you remove a value from the domain?
+                * Remove 'E' from the domain; why does 'E' still get mapped to 'epsilon'?
+                * Don't change the values of the domain or range, but pass in a
+                different value that's not in the domain, e.g., ordinal('Q'). 
+                What value do you get back?
+
+            */
+
+
+            let ordinal = d3.scaleOrdinal()
+                .domain(['A', 'B', 'C', 'D', 'E'])
+                .range(['alpha', 'beta', 'gamma', 'delta', 'epsilon']);
+
+            min = `When we pass the value 'A' into the ordinal scale, we get the value ${ordinal('A')} back`;
+            midpoint = `When we pass the value 'C' into the ordinal scale, we get the value ${ordinal('C')} back`;
+            max = `When we pass the value 'E' into the ordinal scale, we get the value ${ordinal('E')} back`;
+            console.log(min);
+            console.log(midpoint);
+            console.log(max);
+
+
+            /* SQUARE ROOT SCALES
+
+            y = m√x + b
+
+            A square root scale maps a CONTINUOUS domain of values
+            to a CONTINUOUS range of values.
+
+            The pattern for constructing a square root scale is:
+
+            d3.scaleSqrt()
+                .domain([DOMAIN_MIN, DOMAIN_MAX])
+                .range([RANGE_MIN, RANGE_MAX]);
+
+            A square root scale is the same as a linear scale, but
+            with one key difference: each value in the range is
+            proportional to the *square root* of the corresponding
+            value in the domain.
+
+            (Can you imagine a scenario when this might be useful?)
+
+            d3.scaleSqrt() creates a function for us.
+
+            When we pass `DOMAIN_MIN` into the function, it will
+            return to us the value `RANGE_MIN`.
+
+            When we pass `DOMAIN_MAX` into the function, it will
+            return to us the value `RANGE_MAX`.
+
+            If we pass any other value in between `DOMAIN_MIN` and
+            `DOMAIN_MAX`, we will get the corresponding value
+            in between `RANGE_MIN` and `RANGE_MAX`.
+
+
+            EXPERIMENTS TO TEST:
+
+            Consider the following scale, which has the same domain
+            and range as the square root scale, but using a linear scale:
+
+            let s1 = d3.scaleLinear()
+                .domain([0, 10])
+                .range([0, 100]);
+
+            Compare the values returned by sqrt(5) and s1(5). How are the two
+            values related to one another?
+
+            What happens if you multiply the result of the square root scale
+            by itself, e.g., sqrt(5)*sqrt(5)?
+
+            */
+
+
+            let sqrt = d3.scaleSqrt()
+                .domain([0, 10])
+                .range([0, 100]);
+
+            min = `When we pass the value 0 into the square root scale, we get the value ${sqrt(0)} back`;
+            midpoint = `When we pass the value 5 into the square root scale, we get the value ${sqrt(5)} back`;
+            max = `When we pass the value 10 into the square root scale, we get the value ${sqrt(10)} back`;
+            console.log(min);
+            console.log(midpoint);
+            console.log(max);
+
+
+
+        </script>
+    </head>
+    <body>
+    </body>
+</html>

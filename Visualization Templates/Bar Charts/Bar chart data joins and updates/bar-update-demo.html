@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+      #chart {
+        width: 100%;
+        height: 100vh;
+        position: relative;
+      }
+
+      .axisLabel {
+        font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+        font-size: 16pt;
+        font-weight: bold;
+      }
+
+      .axis {
+        font-size: 12pt;
+      }
+
+  </style>
+</head>
+<body>
+  <button id="fall2018">Fall 2018 Data</button>
+  <button id="spring2019">Spring 2019 Data</button>
+  <div id="chart"></div>
+  <script>
+    /*
+    DEFINE DIMENSIONS AND GENERATE SVG CANVAS
+    */
+    const width = document.querySelector("#chart").clientWidth;
+    const height = document.querySelector("#chart").clientHeight;
+    const margin = {top: 100, left: 200, right: 100, bottom: 100};
+    const svg = d3.select("#chart")
+      .append("svg")
+      .attr("width",width)
+      .attr("height",height);
+
+    /*
+    DEFINE DATA SETS
+
+    Data taken from the following websites:
+
+    Median rent for one-bedroom apartment, Fall 2018 to Spring 2019
+    http://realestate.boston.com/renting/2019/02/19/median-one-bedroom-rent-price/
+
+    Median household income, in thousands of dollars (last updated October 2019)
+    https://statisticalatlas.com/neighborhood/Massachusetts/Boston/South-Boston/Household-Income
+
+    In first dataset, `fall2018`, `rent` is the median rent for one-bedroom apartments in Fall 2018
+    */
+    const fall2018 = [
+        {area: "Back Bay", rent: 2800, income: 97.8},
+        {area: "Charlestown", rent: 2500, income: 94.6},
+        {area: "Chinatown", rent: 2910, income: 121.0},
+        {area: "Downtown", rent: 3070, income: 168.6},
+        {area: "Fenway", rent: 2350, income: 37.9},
+        {area: "North End", rent: 2300, income: 98.5},
+        {area: "Allston", rent: 2150, income: 52.1},
+        {area: "Brighton", rent: 1800, income: 65.7},
+        {area: "Dorchester", rent: 1800, income: 62.2},
+        {area: "Jamaica Plain", rent: 1900, income: 84.0},
+        {area: "South Boston", rent: 2900, income: 89.1},
+        {area: "West Roxbury", rent: 1810, income: 90.5}
+    ];
+
+    /*
+    Define the second data set;
+    here, `rent` is the median rent for a one-bedroom apartment in Spring 2019
+
+
+    */
+    const spring2019 = [
+        {area: "Back Bay", rent: 2920, income: 97.8},
+        {area: "Charlestown", rent: 2585, income: 94.6},
+        {area: "Chinatown", rent: 3210, income: 121.0},
+        {area: "Downtown", rent: 3325, income: 168.6},
+        {area: "Fenway", rent: 2400, income: 37.9},
+        {area: "North End", rent: 2350, income: 98.5},
+        {area: "Allston", rent: 1900, income: 52.1},
+        {area: "Brighton", rent: 1950, income: 65.7},
+        {area: "Dorchester", rent: 1700, income: 62.2},
+        {area: "Jamaica Plain", rent: 1950, income: 84.0},
+        {area: "South Boston", rent: 2840, income: 89.1},
+        {area: "West Roxbury", rent: 1810, income: 90.5}
+
+    ];
+
+    /*
+    DEFINE SCALES
+    */
+    const xScale = d3.scaleBand()
+      .domain(fall2018.map(function(d) { return d.area; }))
+      .range([margin.left, width-margin.right])
+      .padding(0.5);
+
+    const yScale = d3.scaleLinear()
+      .domain([0,3500])
+      .range([height-margin.bottom, margin.top]);
+
+    /*
+    DRAW AXES
+    */
+    const xAxis = svg.append("g")
+      .attr("class","axis")
+      .attr("transform",`translate(0, ${height-margin.bottom})`)
+      .call(d3.axisBottom().scale(xScale));
+
+    const yAxis = svg.append("g")
+      .attr("class","axis")
+      .attr("transform",`translate(${margin.left},0)`)
+      .call(d3.axisLeft().scale(yScale).tickFormat(d3.format("$")));
+
+    /*
+    DRAW AXIS LABELS
+    */
+    const xAxisLabel = svg.append("text")
+      .attr("class","axisLabel")
+      .attr("x", width/2)
+      .attr("y", height-margin.bottom/2)
+      .attr("text-anchor","middle")
+      .text("Neighborhood");
+
+    const yAxisLabel = svg.append("text")
+      .attr("class","axisLabel")
+      .attr("transform","rotate(-90)")
+      .attr("x",-height/2)
+      .attr("y",margin.left/2)
+      .attr("text-anchor","middle")
+      .text("Median Rent");
+
+    /*
+    DRAW POINTS FOR SCATTER PLOT WITH THE INITIAL DATASET `fall2018`
+    */
+    let bar = svg.selectAll("rect")
+        .data(fall2018)
+        .enter()
+        .append("rect")
+            .attr("x", function(d) { return xScale(d.area); })
+            .attr("y", function(d) { return yScale(d.rent); })
+            .attr("width", xScale.bandwidth())
+            .attr("height", function(d) { return height - margin.bottom - yScale(d.rent); })
+            .attr("fill","steelblue");
+
+    /*
+    THE DATA UPDATE PATTERN, NOW BOUND TO A BUTTON CLICK EVENT!
+    */ 
+
+    d3.select("#fall2018").on("click", function() {
+
+      let b = svg.selectAll("rect")
+        .data(fall2018, function(d) { return d.area; });
+
+
+      /* IMPORTANT NOTE!
+
+      The following version of the data update is the same as
+      what we saw for the scatter plot -- append new shapes
+      based on new data, merge with the old shapes, and update
+      the attributes of all the shapes together, and finally
+      remove any old shapes that no longer have data attached.
+
+      HOWEVER, WE CAN USE A SHORTCUT HERE!
+
+      If we *KNOW* that the number of bars is exactly the same
+      across both data updates, then there are no new shapes to draw
+      and no existing shapes to remove. Instead, we simply need to
+      modify the attributes of the existing shapes based on the
+      new data that are now bound to them!
+
+      The uncommented code below demonstrates this shortcut.
+
+      */
+
+      /* THE LONG WAY */
+      // b.enter().append("rect")
+      //       .attr("x", function(d) { return xScale(d.area); })
+      //       .attr("y", height - margin.bottom)
+      //       .attr("width", xScale.bandwidth())
+      //       .attr("height", 0)
+      //       .attr("fill","steelblue")
+      //   .merge(b)   
+      //     .transition() // a transition makes the changes visible...
+      //     .duration(1500)
+      //     .attr("x", function(d) { return xScale(d.area); })
+      //     .attr("y", function(d) { return yScale(d.rent); })
+      //     .attr("width", xScale.bandwidth())
+      //     .attr("height", function(d) { return height - margin.bottom - yScale(d.rent); })
+      //     .attr("fill","steelblue");
+
+      // b.exit()
+      //   .remove();
+
+
+
+      /* THE SHORTCUT */
+      b.transition() // a transition makes the changes visible...
+        .duration(1500)
+        .attr("x", function(d) { return xScale(d.area); })
+        .attr("y", function(d) { return yScale(d.rent); })
+        .attr("width", xScale.bandwidth())
+        .attr("height", function(d) { return height - margin.bottom - yScale(d.rent); })
+        .attr("fill","steelblue");
+
+    });
+
+    d3.select("#spring2019").on("click", function() {
+
+      let b = svg.selectAll("rect")
+        .data(spring2019, function(d) { return d.area; });
+
+      /* THE LONG WAY */
+      // b.enter().append("rect")
+      //       .attr("x", function(d) { return xScale(d.area); })
+      //       .attr("y", height - margin.bottom)
+      //       .attr("width", xScale.bandwidth())
+      //       .attr("height", 0)
+      //       .attr("fill","steelblue")
+      //   .merge(b)   
+      //     .transition() // a transition makes the changes visible...
+      //     .duration(1500)
+      //     .attr("x", function(d) { return xScale(d.area); })
+      //     .attr("y", function(d) { return yScale(d.rent); })
+      //     .attr("width", xScale.bandwidth())
+      //     .attr("height", function(d) { return height - margin.bottom - yScale(d.rent); })
+      //     .attr("fill","steelblue");
+
+      // b.exit()
+      //   .remove();
+
+      /* THE SHORTCUT */
+      b.transition() // a transition makes the changes visible...
+        .duration(1500)
+        .attr("x", function(d) { return xScale(d.area); })
+        .attr("y", function(d) { return yScale(d.rent); })
+        .attr("width", xScale.bandwidth())
+        .attr("height", function(d) { return height - margin.bottom - yScale(d.rent); })
+        .attr("fill","steelblue");
+
+    });
+
+
+
+
+
+
+
+  </script>
+
+</body>
+</html>

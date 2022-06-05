@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://d3js.org/d3.v6.min.js"></script>
+    </head>
+    <body>
+        <div id="canvas"></div>
+        <script>
+
+            const width = 1000;
+            const height = 800;
+            const margin = 100;
+
+            const canvas = d3.select("#canvas")
+                .append("canvas")
+                .attr("width", width)
+                .attr("height", height);
+
+            let context = canvas.node().getContext("2d");
+
+
+            let n = 10; // Number of randomly-generated control points
+
+            let yp = d3.scalePoint()
+                .domain(d3.range(1,n+1,1))
+                .range([margin, height - margin]);
+
+            let controlPoints = [];
+
+            for(let i = 1; i <= n; i++) {
+                let x = margin + Math.random()*(width - 2*margin);
+                let y = yp(i);
+                controlPoints.push({x: x, y: y});            
+            }
+
+            const line = d3.line()
+                .x(d => d.x)
+                .y(d => d.y)
+                .curve(d3.curveBasis);
+
+            context.strokeStyle = '#446688';
+            let limit = 40;
+            let increment = 5;
+
+
+
+            /* Draw control points */
+
+            for(let ty = -limit; ty < limit; ty = ty + increment) {
+                
+                context.setTransform(1,0,0,1,0,ty);
+                let pathd = new Path2D(line(controlPoints));
+
+                context.stroke(pathd);
+            }
+
+
+        </script>
+    </body>
+</html>

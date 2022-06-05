@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf8">
+        <title>Simple Data Join</title>
+        <script src="https://d3js.org/d3.v7.min.js"></script>
+    </head>
+    <body>
+        <script>
+
+            /* DEFINE THE DATA SET
+
+            The data set we use must be an array;
+            here, we have an array of objects
+
+            */
+            const data = [
+                {x: 100, y: 100, color: "red"},
+                {x: 250, y: 250, color: "green"},
+                {x: 400, y: 400, color: "blue"}
+            ];
+
+            /* CREATE THE SVG CANVAS */
+            const width = 500;
+            const height = 500;
+            const svg = d3.select("body")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height);
+
+            /* PERFORM THE DATA JOIN */
+
+            svg.selectAll("circle")
+                .data(data)
+                .enter()
+                .append("circle")
+                    .attr("cx", function(d) { return d.x; })
+                    .attr("cy", function(d) { return d.y; })
+                    .attr("fill", function(d) { return d.color; })
+                    .attr("r", 50);
+                    
+
+        </script>
+    </body>
+</html>

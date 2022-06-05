@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://d3js.org/d3.v7.min.js"></script>
+        <style>
+
+            body, html {
+                font-family: Arial, Helvetica, sans-serif;
+            }
+
+            #chart {
+                position: relative;
+            }
+
+            .tooltip {
+                position: absolute;
+                top: 0px;
+                left: 0px;
+                z-index: 100;
+                padding: 5px;
+                border: 1px solid #333333;
+                background-color: rgba(255,255,255,0.9);
+                font-size: 14pt;
+                margin-left: 25px;
+                margin-top: -25px;
+            }
+
+            .handle {
+                cursor: grab;
+            }
+
+            .refline {
+                stroke: #CC0000;
+                stroke-dasharray: 2 2;
+                stroke-width: 2;
+            }
+
+            th {
+                width: 100px;
+                text-align: left;
+            }
+
+            .axis {
+                font-size: 10pt;
+            }
+
+            .axisLabel {
+                font-weight: bold;
+            }
+
+            .referencePoint {
+                r: 8px;
+                fill: #333333;
+                opacity: 0.8;
+            }
+
+        </style>
+    </head>
+    <body>
+        <input type="checkbox" id="refLayer" checked> Turn reference points on/off<br><br>
+        <div id="chart">
+            <div class="tooltip">
+                <table>
+                    <tr>
+                        <th></th>
+                        <th>Datum</th>
+                        <th>Pixels</th>
+                    </tr>
+                    <tr>
+                        <th>Income</th>
+                        <td id="datum--income"></td>
+                        <td id="pixel--income"></td>
+                    </tr>
+                    <tr>
+                        <th>Rent</th>
+                        <td id="datum--rent"></td>
+                        <td id="pixel--rent"></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <script>
+
+
+            /* CONTROL PARAMETERS 
+            
+            What happens when you change `maxIncome`,
+            `maxRent`, or `margin` values below?
+
+            How does the rendering of the chart change?
+
+            */
+
+            const maxIncome = 200;
+            const maxRent = 3500;
+            const margin = {top: 50, left: 100, right: 50, bottom: 100};
+
+
+
+
+
+            /*
+            SETTING UP THE SVG CANVAS
+            */
+            const width = 800;
+            const height = 500;
+
+            /*
+            CREATE THE SVG CANVAS
+            */
+            const svg = d3.select("#chart")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height);
+
+
+            /* THE CODE BELOW CREATES A BACKGROUND GRID */
+            const gridlines = svg.append("g");
+            for(let x = 0; x <= width; x += 50) {
+                gridlines.append("line")
+                .attr("x1", x)
+                .attr("y1", 0)
+                .attr("x2", x)
+                .attr("y2", height)
+                .attr("stroke", "#DDDDDD")
+                .attr("stroke-width", 2)
+                .attr("stroke-dasharray", "2 2");
+            }
+            for(let y = 0; y <= height; y += 50) {
+                gridlines.append("line")
+                .attr("x1", 0)
+                .attr("y1", y)
+                .attr("x2", width)
+                .attr("y2", y)
+                .attr("stroke", "#DDDDDD")
+                .attr("stroke-width", 2)
+                .attr("stroke-dasharray", "2 2");
+            }
+            /* THE CODE ABOVE CREATES A BACKGROUND GRID */
+            
+            
+            /* Create a scale to map values of `income`
+            to pixel position in the x-direction */
+            const xScale = d3.scaleLinear()
+                .domain([0,maxIncome])
+                .range([margin.left, width-margin.right]);
+
+            /* Create a scale to map values of `rent`
+            to pixel position in the y-direction */
+            const yScale = d3.scaleLinear()
+                .domain([0,maxRent])
+                .range([height-margin.bottom, margin.top]);
+
+
+            /* GENERATE AXES */
+            const xAxis = svg.append("g")
+                .attr("class","axis")
+                .attr("transform",`translate(0,${height-margin.bottom})`)
+                .call(d3.axisBottom().scale(xScale).tickFormat(d3.format("$,")));
+
+            const yAxis = svg.append("g")
+                .attr("class","axis")
+                .attr("transform",`translate(${margin.left},0)`)
+                .call(d3.axisLeft().scale(yScale).tickFormat(d3.format("$,")));
+
+            /*
+            ADDING AXIS LABELS
+            */
+
+            svg.append("text")
+                .attr("class","axisLabel")
+                .attr("x", width/2)
+                .attr("y", height - 25)
+                .attr("text-anchor","middle")
+                .text("Median Income (USD, thousands)");
+
+            svg.append("text")
+                .attr("class","axisLabel")
+                .attr("x", -height/2 + margin.bottom/2)
+                .attr("y", 25)
+                .attr("text-anchor","middle")
+                .attr("transform","rotate(-90)")
+                .text("Median Rent (USD)");
+
+
+
+            /* DRAW REFERENCE POINTS
+            
+            The following array of objects holds data about
+            median income (USD, thousands) and median rent for
+            a 1-bedroom apartment (USD) in different neighborhoods
+            of Boston
+
+            Data taken from the following websites:
+
+            Median rent for one-bedroom apartment, Winter 2020
+            https://realestate.boston.com/renting/2020/01/23/median-rent-every-boston-neighborhood/
+            
+            Median household income, in thousands of dollars (last updated November 2020)
+            https://statisticalatlas.com/neighborhood/Massachusetts/Boston/South-Boston/Household-Income
+
+            */
+
+            const data = [
+                {area: "Back Bay", rent: 3000, income: 97.8},
+                {area: "Charlestown", rent: 2500, income: 94.6},
+                {area: "Chinatown", rent: 3400, income: 121.0},
+                {area: "Downtown", rent: 3330, income: 168.6},
+                {area: "Fenway", rent: 2440, income: 37.9},
+                {area: "Mission Hill", rent: 1890, income: 37.3},
+                {area: "North End", rent: 2300, income: 98.5},
+                {area: "Allston", rent: 2200, income: 52.1},
+                {area: "Brighton", rent: 1990, income: 65.7},
+                {area: "Dorchester", rent: 1950, income: 62.2},
+                {area: "Jamaica Plain", rent: 2050, income: 84.0},
+                {area: "Roxbury", rent: 2200, income: 32.3},
+                {area: "South Boston", rent: 2600, income: 89.1},
+                {area: "West Roxbury", rent: 2100, income: 90.5}
+            ];
+
+            let referencePoints = svg.append("g");
+
+            // Draw the reference points
+            referencePoints.selectAll("circle")
+                .data(data)
+                .enter()
+                .append("circle")
+                    .attr("class", "referencePoint")
+                    .attr("cx", function(d) { return xScale(d.income); })
+                    .attr("cy", function(d) { return yScale(d.rent); });
+
+
+
+            /* CREATE THE TOOLTIP */
+
+            let tooltip = d3.select(".tooltip");
+            tooltip.style("top", `${yScale(0)}px`)
+                .style("left", `${xScale(0)}px`);
+
+            tooltip.select("#datum--income").html(`$0`);
+            tooltip.select("#datum--rent").html(`$0`);
+            tooltip.select("#pixel--income").html(`${xScale(0)} px (x)`);
+            tooltip.select("#pixel--rent").html(`${yScale(0)} px (y)`);
+
+
+            /* DEFINE DRAG FUNCTIONALITY */
+
+            const drag = d3.drag()
+                .on("drag", function(event) {
+
+                    // Get current x, y
+                    let x = event.x, y = event.y;
+
+                    // Constrain position to bounds of plotting area
+                    if(event.x < margin.left) {
+                        x = margin.left;
+                    } else if(event.x > width - margin.right) {
+                        x = width - margin.right;
+                    }
+
+                    if(event.y < margin.top) {
+                        y = margin.top;
+                    } else if(event.y > height - margin.bottom) {
+                        y = height - margin.bottom;
+                    }
+
+                    // Update position of circle handle
+                    circle.attr("cx", x).attr("cy", y);
+
+                    // Invert scale to get corresponding rent/income values
+                    let income = Math.round(xScale.invert(x) * 100) / 100;
+                    let rent = Math.round(yScale.invert(y) * 100) / 100;
+
+                    // Update tooltip position and contents
+                    tooltip.style("top", `${y}px`)
+                        .style("left", `${x}px`);
+
+                    tooltip.select("#datum--income").html(`$${income}`);
+                    tooltip.select("#datum--rent").html(`$${rent}`);
+                    tooltip.select("#pixel--income").html(`${Math.round(x)} px (x)`);
+                    tooltip.select("#pixel--rent").html(`${Math.round(y)} px (y)`);
+
+                    // Update position of dotted reference lines
+                    vert.attr("x1", x)
+                        .attr("y1", yScale(0))
+                        .attr("x2", x)
+                        .attr("y2", y);
+
+                    horiz.attr("x1", xScale(0))
+                        .attr("y1", y)
+                        .attr("x2", x)
+                        .attr("y2", y);
+
+                });
+
+
+            /* DRAW REFERENCE LINES 
+            
+            These are the lines that extend from the x- and y-axes to the
+            circle handle as it is dragged across the plotting area
+
+            */
+            let vert = svg.append("line")
+                .attr("x1", xScale(0))
+                .attr("y1", yScale(0))
+                .attr("x2", xScale(0))
+                .attr("y2", yScale(0))
+                .attr("class", "refline");
+
+            let horiz = svg.append("line")
+                .attr("x1", xScale(0))
+                .attr("y1", yScale(0))
+                .attr("x2", xScale(0))
+                .attr("y2", yScale(0))
+                .attr("class", "refline");
+
+            /*
+            DRAW THE DRAGGABLE CIRCLE
+            */
+
+            let circle = svg.append("circle")
+                .attr("class","handle")
+                .attr("cx", xScale(0))
+                .attr("cy", yScale(0))
+                .attr("r", 15)
+                .attr("fill", "#CC0000")
+                .attr("stroke", "#CC0000")
+                .attr("stroke-width", 5)
+                .attr("fill-opacity", 0.6)
+                .call(drag);
+
+
+            /* TURN LAYER ON/OFF 
+            
+            When the checkbox is clicked, it makes the
+            reference points in the scatter plot visible
+            or invisible
+            */
+
+            d3.select("#refLayer").on("click", function() {
+
+                let checked = d3.select(this).property("checked");
+
+                if(checked) {
+                    referencePoints.attr("opacity", 1);
+                } else {
+                    referencePoints.attr("opacity", 0);
+                }
+            });
+
+        </script>
+    </body>
+</html>

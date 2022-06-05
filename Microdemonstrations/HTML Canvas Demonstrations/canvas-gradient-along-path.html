@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://d3js.org/d3.v6.min.js"></script>
+
+    </head>
+    <body>
+        <div id="canvas"></div>
+        <script>
+
+            const width = 1000;
+            const height = 800;
+
+            const canvas = d3.select("#canvas")
+                .append("canvas")
+                .attr("width", width)
+                .attr("height", height);
+
+            let context = canvas.node().getContext("2d");
+
+            let controlPoints = [
+                {x: 200, y: 400},
+                {x: 400, y: 600},
+                {x: 600, y: 400},
+                {x: 800, y: 600}
+            ];
+
+            let line = d3.line()
+                .x(d => d.x)
+                .y(d => d.y)
+                .curve(d3.curveCardinal);
+
+
+            /* Draw the path */
+
+            // Start by creating detached SVG `path` element
+            let path = d3.create("svg:path")
+                .datum(controlPoints)
+                .attr("d", line);
+
+            // Then, exploit the SVG path.getPointAtLength() method
+            // to interpolate more points along the path
+
+            let ni = 1000;
+            let totalLength = path.node().getTotalLength();
+            let interpolated = [];
+
+            let lengths = [];
+
+            for(let i = 1; i <= ni; i++) {
+                let l = (i/ni)*totalLength;
+                lengths.push(l);
+
+                let p = path.node().getPointAtLength(l);
+                interpolated.push({x: p.x, y: p.y});
+            }
+
+            /* Create color scale for filling gradient */
+            let colorScale = d3.scaleLinear()
+                .domain([0, interpolated.length/2, interpolated.length])
+                .range(["#CCCCCC","#F6C900", "#446688"]);
+            
+
+        
+
+            /* Final step:
+
+            Now we can iterate over each interpolated point and draw
+            a short line segment between each pair of points, applying
+            a custom linear gradient to each segment
+
+            */
+
+            context.lineWidth = 5;
+            for(let i = 0; i < interpolated.length-1; i++) {
+
+                let start = interpolated[i];
+                let end = interpolated[i+1];
+
+                let gradient = context.createLinearGradient(start.x, start.y, end.x, end.y);
+                gradient.addColorStop(0, colorScale(i));
+                gradient.addColorStop(1, colorScale(i+1));
+
+                context.beginPath();
+                context.moveTo(start.x, start.y);
+                context.lineTo(end.x, end.y);
+                context.strokeStyle = gradient;
+                context.stroke();
+            }
+
+
+
+
+
+        </script>
+    </body>
+</html>

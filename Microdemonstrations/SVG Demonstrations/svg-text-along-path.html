@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://d3js.org/d3.v6.min.js"></script>
+        <style>
+
+            text {
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: 36px;
+                font-weight: bold;
+                fill: darkred;
+            }
+        </style>
+    </head>
+    <body>
+        <script>
+
+            const width = 1000;
+            const height = 800;
+
+
+            const svg = d3.select("body")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height);
+
+            let controlPoints = [
+                {x: 200, y: 400},
+                {x: 400, y: 600},
+                {x: 600, y: 400},
+                {x: 800, y: 600}
+            ];
+
+            let line = d3.line()
+                .x(d => d.x)
+                .y(d => d.y)
+                .curve(d3.curveCardinal);
+
+            let path = svg.append("path")
+                .datum(controlPoints)
+                .attr("d", line)
+                .attr("id", "curve") // Important! We will use this ID to control the shape of the textPath below.
+                .attr("stroke", "black")
+                .attr("fill", "none")
+                .attr("stroke-width", 2);
+
+            // Look at the CSS above to see how the text is being styled
+            let text = svg.append("text")
+                .attr("width", width)
+                .append("textPath")
+                    .attr("xlink:href", "#curve") // Notice that we're using CSS selector syntax to refer to the path with ID `curve` here
+                    .text("This is text along a path! Wheee!");
+
+
+        </script>
+    </body>
+</html>

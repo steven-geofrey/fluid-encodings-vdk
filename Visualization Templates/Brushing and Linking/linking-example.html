@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Linking Example</title>
+  <script src="https://d3js.org/d3.v6.js"></script>
+  <style>
+    .axisLabel {
+      font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+      font-size: 16pt;
+      font-weight: bold;
+    }
+
+    .axis {
+      font-size: 12pt;
+      font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    }
+
+    #header {
+      width: 100%;
+      text-align: center;
+      font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+      font-size: 24pt;
+      font-weight: bold;
+    }
+
+    #scatterplot, #barchart {
+      width: 50%;
+      height: 80vh;
+      margin: 0px;
+      padding: 0px;
+      position: relative;
+      float: left;
+    }
+
+  </style>
+</head>
+<body>
+  <div id="header">Median Rent and Income by Boston Neighborhood, Spring 2019</div>
+  <div id="scatterplot"></div>
+  <div id="barchart"></div>
+  <script>
+
+    /* CREATE NAMESPACES */
+
+    let scatter = {};
+    let bar = {};
+
+    /*
+    DEFINE DATA SET
+
+    Data taken from the following websites:
+
+    Median rent for one-bedroom apartment, Spring 2019
+    http://realestate.boston.com/renting/2019/02/19/median-one-bedroom-rent-price/
+
+    */
+    let data = [
+          {area: "Back Bay", rent: 2920, income: 97.8, population: 21.88, charles: true},
+          {area: "Charlestown", rent: 2585, income: 94.6, population: 16.44, charles: false},
+          {area: "Chinatown", rent: 3210, income: 121.0, population: 6.87, charles: false},
+          {area: "Downtown", rent: 3325, income: 168.6, population: 1.98, charles: true},
+          {area: "Fenway", rent: 2400, income: 37.9, population: 21.77, charles: true},
+          {area: "Mission Hill", rent: 2100, income: 37.3, population: 13.93, charles: false},
+          {area: "North End", rent: 2350, income: 98.5, population: 10.61, charles: false},
+          {area: "Allston", rent: 1900, income: 52.1, population: 28.82, charles: true},
+          {area: "Brighton", rent: 1950, income: 65.7, population: 45.98, charles: true},
+          {area: "Dorchester", rent: 1700, income: 62.2, population: 60.79, charles: false},
+          {area: "Jamaica Plain", rent: 1950, income: 84.0, population: 41.26, charles: false},
+          {area: "Roxbury", rent: 1700, income: 32.3, population: 52.53, charles: false},
+          {area: "South Boston", rent: 2840, income: 89.1, population: 33.69, charles: false},
+          {area: "West Roxbury", rent: 1810, income: 90.5, population: 30.44, charles: true}
+        ];
+
+    // We can order the objects in `data` in descending order by `rent`,
+    // which will change the order of the bars drawn later in the chart
+
+    data = data.sort(function(a, b) {
+      return b.rent - a.rent;
+    });
+
+    /* DRAW SCATTER PLOT FIRST */
+
+    /*
+    DEFINE DIMENSIONS AND GENERATE SVG CANVAS
+    */
+
+    scatter.width = document.querySelector("#scatterplot").clientWidth;
+    scatter.height = document.querySelector("#scatterplot").clientHeight;
+    scatter.margin = {top: 100, left: 150, right: 50, bottom: 150};
+
+    scatter.svg = d3.select("#scatterplot")
+        .append("svg")
+        .attr("width",scatter.width)
+        .attr("height",scatter.height);
+
+    /*
+    DEFINE SCALES
+    */
+    scatter.xScale = d3.scaleLinear()
+      .domain([0,170])
+      .range([scatter.margin.left, scatter.width-scatter.margin.right]);
+
+    scatter.yScale = d3.scaleLinear()
+      .domain([0,3500])
+      .range([scatter.height-scatter.margin.bottom, scatter.margin.top]);
+
+    /*
+    DRAW AXES
+    */
+    scatter.xAxis = scatter.svg.append("g")
+      .attr("class","axis")
+      .attr("transform",`translate(0, ${scatter.height-scatter.margin.bottom})`)
+      .call(d3.axisBottom().scale(scatter.xScale).tickFormat(d3.format("$")));
+
+    scatter.yAxis = scatter.svg.append("g")
+      .attr("class","axis")
+      .attr("transform",`translate(${scatter.margin.left},0)`)
+      .call(d3.axisLeft().scale(scatter.yScale).tickFormat(d3.format("$")));
+
+    /*
+    DRAW AXIS LABELS
+    */
+    scatter.xAxisLabel = scatter.svg.append("text")
+      .attr("class","axisLabel")
+      .attr("x", scatter.width/2)
+      .attr("y", scatter.height-scatter.margin.bottom/2)
+      .attr("text-anchor","middle")
+      .text("Median Income (Thousands)");
+
+    scatter.yAxisLabel = scatter.svg.append("text")
+      .attr("class","axisLabel")
+      .attr("transform","rotate(-90)")
+      .attr("x",-scatter.height/2)
+      .attr("y",scatter.margin.left/2)
+      .attr("text-anchor","middle")
+      .text("Median Rent");
+
+    /*
+    DRAW POINTS FOR SCATTER PLOT WITH THE INITIAL DATASET `spring2019`
+    */
+    scatter.circles = scatter.svg.selectAll("circle")
+        .data(data)
+        .enter()
+        .append("circle")
+            .attr("cx", function(d) { return scatter.xScale(d.income); })
+            .attr("cy", function(d) { return scatter.yScale(d.rent); })
+            .attr("r", 10)
+            .attr("fill","steelblue");
+
+    console.log(scatter);
+
+    /* THEN, DRAW BAR CHART */
+
+    /*
+    DEFINE DIMENSIONS AND GENERATE SVG CANVAS
+    */
+
+    bar.width = document.querySelector("#barchart").clientWidth;
+    bar.height = document.querySelector("#barchart").clientHeight;
+    bar.margin = {top: 100, left: 150, right: 50, bottom: 150};
+
+    bar.svg = d3.select("#barchart")
+        .append("svg")
+        .attr("width",bar.width)
+        .attr("height",bar.height);
+
+    /*
+    DEFINE SCALES
+    Here, we will use d3.scaleBand() to take a *discrete* input domain of values
+    and map them to a continuous output range, which will be broken up into
+    equal-sized chunks.
+
+    The general syntax for d3.scaleBand() is as follows:
+
+    d3.scaleBand()
+      .domain([VALUE 1, VALUE 2, VALUE 3, ...])
+      .rangeRound([START, END])
+      .padding(0.5);
+    */
+
+    bar.neighborhoods = data.map(function(d) { return d.area; });
+
+    bar.xScale = d3.scaleBand()
+      .domain(bar.neighborhoods)
+      .rangeRound([bar.margin.left, bar.width-bar.margin.right])
+      .padding(0.2);
+
+    bar.yScale = d3.scaleLinear()
+        .domain([0,3500])
+        .range([bar.height-bar.margin.bottom, bar.margin.top]);
+
+    /*
+    DRAW AXES
+    */
+    bar.xAxis = bar.svg.append("g")
+        .attr("class","axis")
+        .attr("transform",`translate(0, ${bar.height-bar.margin.bottom})`)
+        .call(d3.axisBottom().scale(bar.xScale));
+
+    bar.yAxis = bar.svg.append("g")
+        .attr("class","axis")
+        .attr("transform",`translate(${bar.margin.left},0)`)
+        .call(d3.axisLeft().scale(bar.yScale).tickFormat(d3.format("$")));
+
+    /*
+    DRAW RECT ELEMENTS FOR BARS
+    */
+    bar.bars = bar.svg.selectAll("rect")
+      .data(data)
+      .enter()
+      .append("rect")
+        .attr("x",function(d) { return bar.xScale(d.area); })
+        .attr("y", function(d) { return bar.yScale(d.rent); })
+        .attr("width",bar.xScale.bandwidth())
+        .attr("height", function(d) { return bar.height - bar.margin.bottom - bar.yScale(d.rent); })
+        .attr("fill","steelblue");
+
+    /*
+    ROTATE X-AXIS TICK LABELS
+    */
+
+    bar.xAxis.selectAll("text")
+      .attr("transform","rotate(45)")
+      .attr("text-anchor","start");
+
+    /*
+    DRAW AXIS LABELS
+    */
+
+    bar.yAxisLabel = bar.svg.append("text")
+        .attr("class","axisLabel")
+        .attr("transform","rotate(-90)")
+        .attr("x",-bar.height/2)
+        .attr("y",bar.margin.left/2)
+        .attr("text-anchor","middle")
+        .text("Median Rent");
+
+    /* LINKING */
+
+    scatter.circles.on("mouseover", function(e, d) {
+      let neighborhood = d.area;
+
+      bar.bars.attr("opacity",0.2);
+
+      bar.bars.filter(function(dd) {
+        return dd.area === neighborhood;
+      }).attr("opacity",1);
+
+      scatter.circles.attr("opacity",0.2);
+      d3.select(this).attr("opacity",1);
+
+    }).on("mouseout", function() {
+
+      bar.bars.attr("opacity",1);
+      scatter.circles.attr("opacity",1);
+
+    });
+
+    bar.bars.on("mouseover", function(e, d) {
+      let neighborhood = d.area;
+
+      scatter.circles.attr("opacity",0.2);
+
+      scatter.circles.filter(function(dd) {
+        return dd.area === neighborhood;
+      }).attr("opacity",1);
+
+      bar.bars.attr("opacity",0.2);
+      d3.select(this).attr("opacity",1);
+
+    }).on("mouseout", function() {
+
+      scatter.circles.attr("opacity",1);
+      bar.bars.attr("opacity",1);
+
+    });
+
+  </script>
+</body>
+</html>

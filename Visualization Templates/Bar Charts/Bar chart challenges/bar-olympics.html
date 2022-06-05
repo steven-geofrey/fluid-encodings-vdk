@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Medals Won in the 2021 Tokyo Olympics</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+
+      body, html {
+        text-align: center;
+      }
+
+      h1 {
+        font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        font-weight: normal;
+        font-size: 42pt;
+        margin-bottom: 50px;
+      }
+
+      text {
+        font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        font-weight: normal;
+        font-size: 12pt;
+        dominant-baseline: middle;
+      }
+
+      rect {
+        fill: steelblue;
+      }
+
+    </style>
+  </head>
+  <body>
+    <h1>Medals Won in the 2021 Tokyo Olympics</h1>
+    <script>
+
+
+      /* CREATE THE SVG CANVAS */
+      const width = 650;
+      const height = 400;
+      
+      const svg = d3.select("body")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+      /* THE CODE BELOW CREATES A BACKGROUND GRID */
+      const gridlines = svg.append("g");
+      for(let x = 0; x <= width; x += 50) {
+        gridlines.append("line")
+          .attr("x1", x)
+          .attr("y1", 0)
+          .attr("x2", x)
+          .attr("y2", height)
+          .attr("stroke", "#DDDDDD")
+          .attr("stroke-width", 2)
+          .attr("stroke-dasharray", "2 2");
+      }
+      for(let y = 0; y <= height; y += 50) {
+        gridlines.append("line")
+          .attr("x1", 0)
+          .attr("y1", y)
+          .attr("x2", width)
+          .attr("y2", y)
+          .attr("stroke", "#DDDDDD")
+          .attr("stroke-width", 2)
+          .attr("stroke-dasharray", "2 2");
+      }
+      /* THE CODE ABOVE CREATES A BACKGROUND GRID */
+
+      
+      /* DRAW A BAR CHART
+      
+
+      The following data set on Kaggle shows the number of gold,
+      silver, bronze, and total medals won by different teams
+      in the 2021 Olympics in Tokyo:
+
+      https://www.kaggle.com/arjunprasadsarkhel/2021-olympics-in-tokyo
+
+      Your task is to use these data to construct a bar chart.
+
+      */
+
+      const margin = 100;
+      const spacing = 50;
+      const barHeight = 40;
+
+
+      /* TASK 1.1
+
+      From the Kaggle data set, choose FIVE teams
+      to focus on.
+
+      Create an array of objects to store data about
+      your selected teams. Each object should have 
+      two properties to store the following data:
+        the name of the team or country, and
+        the total number of medals won.
+
+      */
+
+
+      const data = [
+        {country: "USA", total: 113},
+        {country: "Japan", total: 58},
+        {country: "Italy", total: 40},
+        {country: "Brazil", total: 21},
+        {country: "Norway", total: 8}
+      ];
+
+      /* TASK 1.2
+
+      Based on the range of values for runtime,
+      set the value of the variable `max` to
+      the maximum value for the variable in the
+      visualization.
+
+      This value will determine the highest tick
+      value in the x-axis; it will also be used
+      to scale the size of the bars proportionally
+      to runtime, based on the size of the
+      chart plotting area.
+
+      */
+
+      let max = 120;
+
+
+      /* TASK 2
+
+      Use the .forEach() method to draw SVG rectangles
+      for each team in your data set.
+
+      The `width` attribute of each rectangle should
+      be proportional to the number of medals won.
+
+      The `height` attribute should be defined by the
+      variable `barHeight`.
+
+      The bars should be evenly spaced vertically;
+      the spacing should be determined by the
+      variable `spacing`.
+
+      */
+
+
+      data.forEach(function(d, i) {
+
+        let barWidth = (d.total / max) * (width - 2*margin);
+
+        svg.append("rect")
+          .attr("x", margin)
+          .attr("y", 50 + spacing * i)
+          .attr("width", barWidth)
+          .attr("height", barHeight);
+
+        svg.append("text")
+          .attr("x", margin - 10)
+          .attr("y", (50 + spacing * i) + barHeight/2)
+          .attr("text-anchor", "end")
+          .text(d.country);
+
+        svg.append("text")
+          .attr("x", margin + barWidth + 5)
+          .attr("y", (50 + spacing * i) + barHeight/2)
+          .text(d.total);
+
+      });
+
+
+      /* TASK 3
+
+      Modify your .forEach() code to also draw SVG `text`
+      labels for each of the bars in your bar chart.
+
+      The labels should display the name of each state.
+
+      The labels should be positioned to the left of
+      each corresponding bar in the bar chart, and
+      centered in the middle of each bar vertically.
+
+      */
+
+
+      /* TASK 4
+
+
+      Modify your .forEach() code to also draw SVG `text`
+      labels showing the numerical count of sightings
+      for each of the bars in your bar chart.
+
+      The labels should be positioned to the right of
+      each bar, offset by a few pixels horizontally.
+
+      The labels shouldn't be aligned with each other;
+      they should be positioned relative to the number
+      of sightings.
+
+      */
+
+
+
+
+
+
+
+
+
+
+
+      /* DRAW SOME AXES
+      
+      The patterns introduced below will be discussed in more detail
+      in future weeks...!
+
+      */
+
+      // A line for the vertical axis
+      svg.append("line")
+        .attr("x1", margin)
+        .attr("y1", 0)
+        .attr("x2", margin)
+        .attr("y2", 300)
+        .attr("stroke", "black");
+
+      // An x-axis with ticks
+      let xAxis = svg.append("g")
+      .attr("transform", `translate(${margin}, ${height-margin})`)
+      .call(
+        d3.axisBottom()
+          .scale(
+            d3.scaleLinear()
+              .domain([0, max])
+              .range([0, width - 2*margin])
+          )
+      );
+
+      // A label for the x-axis
+      svg.append("text")
+        .attr("x", 350)
+        .attr("y", 350)
+        .attr("text-anchor", "middle")
+        .text("Number of Medals");
+
+    </script>
+  </body>
+</html>

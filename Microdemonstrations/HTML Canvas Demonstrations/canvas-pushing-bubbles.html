@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://d3js.org/d3.v6.min.js"></script>
+    </head>
+    <body>
+        <div id="canvas"></div>
+        <script>
+
+            const width = 1000;
+            const height = 800;
+
+
+            const canvas = d3.select("#canvas")
+                .append("canvas")
+                .attr("width", width)
+                .attr("height", height);
+
+            let context = canvas.node().getContext("2d");
+
+
+            context.strokeStyle = '#446688';
+            context.fillStyle = '#F6C900';
+            context.lineWidth = 2;
+
+            let position = {x: width/2, y: height/2};
+            let mouse = {x: null, y: null};
+            let radius = 50;
+            let tolerance = 1; // What does this number do?
+
+            context.beginPath();
+            context.arc(position.x, position.y, radius, 0, 2*Math.PI);
+            context.fill();
+            context.closePath();
+
+            // Why are we attaching the mousemove event to `canvas`, not `context`?
+            canvas.on("mousemove", event => {
+
+                let cx = d3.pointer(event)[0];
+                let cy = d3.pointer(event)[1];
+
+                let distance = Math.sqrt(Math.pow(cx - position.x, 2) + Math.pow(cy - position.y, 2));
+                if(distance <= radius + tolerance) {
+
+                    // Calculate change in x and y from previous mouse position
+                    let dx = cx - mouse.x;
+                    let dy = cy - mouse.y;
+
+                    // Add change in mouse position to circle's coordinates
+                    position.x += dx;
+                    position.y += dy;
+
+                    // Redraw canvas and circle
+                    context.clearRect(0, 0, width, height);
+                    context.beginPath();
+                    context.arc(position.x, position.y, radius, 0, 2*Math.PI);
+                    context.fill();
+                    context.closePath();
+                }
+
+
+                // Update previous mouse position with current coordinates
+                mouse.x = cx;
+                mouse.y = cy;
+
+            });
+
+
+        </script>
+    </body>
+</html>

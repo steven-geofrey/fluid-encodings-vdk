@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="./style/style.css">
+        <script src="https://d3js.org/d3.v7.js"></script>
+    </head>
+    <body>
+        <div id="container">
+            <div id="options">
+                <h2>Filter by region</h2>
+                <input type="checkbox" class="region--option" value="Americas" checked> Americas <br>
+                <input type="checkbox" class="region--option" value="Asia" checked> Asia <br>
+                <input type="checkbox" class="region--option" value="Africa" checked> Africa <br>
+                <input type="checkbox" class="region--option" value="Europe" checked> Europe <br>
+                <input type="checkbox" class="region--option" value="Oceania" checked> Oceania 
+            </div>
+            <div id="chart-container">
+                <h1>Gapminder: GDP per Capita and Life Expectancy, 2007</h1>
+                <div id="chart"></div>
+            </div>
+        </div>
+        <script src="./script.js"></script>
+    </body>
+</html>

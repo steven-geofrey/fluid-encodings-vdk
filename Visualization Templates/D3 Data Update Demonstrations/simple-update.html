@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+  <script>
+    const width = 500;
+    const height = 500;
+    const svg = d3.select("body")
+      .append("svg")
+      .attr("width",width)
+      .attr("height",height);
+
+    /*
+    Define the initial data set;
+    our initial group of circles will be drawn from this data set
+    */
+    const dataset1 = [
+      {x: 100, y: 100, color: "orange"},
+      {x: 250, y: 250, color: "green"},
+      {x: 400, y: 400, color: "blue"}
+    ];
+
+    /*
+    DRAW THE INITIAL CIRCLES.
+    These are based on the first data set, in variable `dataset1` above.
+    Note the second argument to the .data() method:
+    this is a `key accessor function` that specifies which property to use as an ID from
+    each data point/object to uniquely identify each circle we draw;
+    this becomes important later on when we update the data.
+    If we don't specify a key function, then the default will be to use
+    each circle's INDEX as its ID
+    */
+    let circle = svg.selectAll("circle")
+      .data(dataset1, function(d) { return d.color; })
+      .enter()
+      .append("circle")
+        .attr("cx", function(d) { return d.x; })
+        .attr("cy", function(d) { return d.y; })
+        .attr("fill", function(d) { return d.color; })
+        .attr("r", 50);
+
+    /*
+    Here we introduce a NEW data set that we want to bind to our circles --
+    with a new object/data point at the end (a 4th circle that is purple);
+    also, we've modified the `x` property of the orange circle to `200`
+    */
+    const dataset2 = [
+      {x: 200, y: 100, color: "orange"},
+      {x: 250, y: 250, color: "green"},
+      {x: 400, y: 400, color: "blue"},
+      {x: 400, y: 100, color: "purple"}
+    ];
+
+    /*
+    We start by binding the new data set to our selection of circles;
+    this returns a selection of all the circles, now with the new
+    data bound to them
+    */
+    let c = svg.selectAll("circle")
+        .data(dataset2, function(d) { return d.color; });
+
+    /*
+    Then, we create new circles for any NEW data points in the newly bound data set;
+    we duplicate our attribute declaration pattern from above, because we want
+    each new circle to have the same cx/cy/fill attributes as the existing circles.
+    One key difference: here, we are starting the `r` (radius) attribute of the new
+    circle(s) at 0, because we later want to use a transition to make the circle(s)
+    more visibly appear on the screen.
+    */
+    c.enter().append("circle")
+            .attr("cx", function(d) { return d.x; })
+            .attr("cy", function(d) { return d.y; })
+            .attr("fill", function(d) { return d.color; })
+            .attr("r", 0)
+    // The previous line returns a selection of new circles only;
+    // here, were use the .merge() method to take that new circle selection
+    // and "merge" (join/combine) with the original unmodified selection above
+        .merge(c)
+    // Finally, we use a transition to move all the circles into their new positions,
+    // based on the newly bound data set. Note that we are repeating our attribute
+    // declarations, just like before.
+            .transition() // a transition makes the changes visibly apparent...
+            .duration(1000)
+            .attr("cx", function(d) { return d.x; })
+            .attr("cy", function(d) { return d.y; })
+            .attr("fill", function(d) { return d.color; })
+            .attr("r", 50);
+
+    /*
+    Finally, we remove any circles that shouldn't be visible anymore --
+    that is, we remove any circles for which there is not a data point
+    in the data set bound to the selection
+    */
+    c.exit().remove();
+
+
+    /*
+    Now we introduce...
+    A THIRD DATA SET -- note that we've deleted an object/data point
+    (the orange circle has been removed from the data set!)
+    */
+    const dataset3 = [
+      {x: 250, y: 250, color: "green"},
+      {x: 400, y: 400, color: "blue"},
+      {x: 400, y: 100, color: "purple"}
+    ];
+
+    /*
+    We follow the same pattern from above to bind this new data set
+    to our existing selection of circles,
+    create new circles for any new elements, and then
+    transition all the circles into the new positions
+    */
+    c = svg.selectAll("circle")
+        .data(dataset3, function(d) { return d.color; });
+
+    c.enter().append("circle")
+            .attr("cx", function(d) { return d.x; })
+            .attr("cy", function(d) { return d.y; })
+            .attr("fill", function(d) { return d.color; })
+            .attr("r", 0)
+        .merge(c)
+            .transition()
+            .duration(1000)
+            .delay(1000)
+            .attr("cx", function(d) { return d.x; })
+            .attr("cy", function(d) { return d.y; })
+            .attr("fill", function(d) { return d.color; })
+            .attr("r", 50);
+
+    /*
+    We remove any circles that need to be deleted, e.g., the orange circle
+    that was in our initial data set but is now no longer in the final data set.
+    We use a transition to make the removal of the circle more apparent.
+    */
+    c.exit()
+        .transition()
+        .duration(1000)
+        .delay(1000)
+        .attr("r",0)
+        .remove();
+
+
+  </script>
+
+</body>
+</html>

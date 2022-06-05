@@ -1,0 +1,19 @@
+html, body {
+    margin: 0px;
+    padding: 0px;
+    text-align: center;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+svg {
+    margin-top: 50px;
+}
+
+.axisLabel {
+    font-size: 16pt;
+    font-weight: bold;
+}
+
+text {
+    font-size: 12pt;
+}

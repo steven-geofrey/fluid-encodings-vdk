@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap');
+
+html, body {
+    margin: 0px;
+    padding: 50px;
+    font-family: 'Merriweather', serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+h1 {
+    font-weight: 700;
+    font-size: 48pt;
+    color: #225ea8;
+}
+
+h2 {
+    font-weight: 400;
+    font-size: 20pt;
+}
+
+h3 {
+    font-family: "Baloo 2", sans-serif;
+    font-weight: 700;
+    font-size: 16pt;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    padding: 0px;
+    margin-top: 50px;
+    margin-bottom: 10px;
+}
+
+#background {
+    z-index: 0;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+    padding: 0px;
+}
+
+main {
+    z-index: 10;
+    position: absolute;
+}
+
+circle:hover {
+    stroke: #CCCCCC;
+    stroke-width: 3;
+    opacity: 0.8;
+    transition: opacity 250ms;
+}
+
+ul {
+    padding-left: 0px;
+    list-style-type: none;
+}
+
+a:link, a:visited {
+    color: steelblue;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}

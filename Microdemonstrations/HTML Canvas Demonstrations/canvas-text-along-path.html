@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://d3js.org/d3.v6.min.js"></script>
+        <style>
+
+            text {
+                font-family: Arial, Helvetica, sans-serif;
+                font-size: 36px;
+                font-weight: bold;
+                fill: darkred;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="canvas"></div>
+        <script>
+
+            const width = 1000;
+            const height = 800;
+
+            const canvas = d3.select("#canvas")
+                .append("canvas")
+                .attr("width", width)
+                .attr("height", height);
+
+            let context = canvas.node().getContext("2d");
+
+            let controlPoints = [
+                {x: 200, y: 400},
+                {x: 400, y: 600},
+                {x: 600, y: 400},
+                {x: 800, y: 600}
+            ];
+
+            let line = d3.line()
+                .x(d => d.x)
+                .y(d => d.y)
+                .curve(d3.curveCardinal);
+
+
+            /* Draw the path */
+
+            let textToDraw = "This is text along a path! Wheee!";
+
+            // Start by creating detached SVG `path` element
+            let path = d3.create("svg:path")
+                .datum(controlPoints)
+                .attr("d", line);
+
+            // Then, exploit the SVG path.getPointAtLength() method
+            // to interpolate more points along the path
+
+            let ni = 1000;
+            let totalLength = path.node().getTotalLength();
+            let interpolated = [];
+
+            let lengths = [];
+
+            for(let i = 1; i <= ni; i++) {
+                let l = (i/ni)*totalLength;
+                lengths.push(l);
+
+                let p = path.node().getPointAtLength(l);
+                interpolated.push(p);
+            }
+            
+
+            /*
+            Iterate through interpolated points; at each point,
+            compute the slope at the point, then use this slope
+            to compute the angle of the slope at the point
+            */
+
+
+            for(let q = 1; q < interpolated.length-1; q++) {
+    
+                let a = interpolated[q-1];
+                let b = interpolated[q];
+                let c = interpolated[q+1];
+                let slope = (c.y - a.y) / (c.x - a.x);
+
+                /*
+                Computing the angle of slope:
+
+                At each point, we now know the slope at that point.
+                To find the angle of the slope, we need to use some trigonometry.
+
+                If we know that the slope at this point represents the change in `y`
+                for each unit change in `x`, then we can draw a right triangle to
+                compute the angle:
+
+                  dx = 1
+                θ -----|
+                 \     |
+                  \    |
+                 d \   |  dy = `slope`
+                    \  |
+                     \ |
+                      \|
+
+
+                Using trigonometry, we know:
+
+                cos θ = dx / d
+
+                We already know dx = 1. To compute `d`, we can use the Pythagorean theorem:
+
+                d^2 = dx^2 + dy^2
+
+                This reduces to:
+
+                d^2 = (1*1) + (slope*slope) = 1 + slope^2
+
+                Thus `d` is equal to:
+
+                d = √(1 + slope^2)
+
+                Finally, we use this information to take the arccosine of the formula above
+                to determine the value of θ:
+
+                θ = cos-1 (1 / √(1 + slope^2))
+
+                */
+
+                let d = Math.sqrt(1 + Math.pow(slope,2));
+                let theta = Math.acos(1 / d);
+
+                if(slope < 0) {
+                    theta = -theta;
+                }
+                // Store the angle
+                b.angle = theta;
+
+
+            }
+
+
+            
+            context.strokeStyle = "#000000";
+            context.lineWidth = 2;
+            let cPath = new Path2D(line(controlPoints));
+            context.stroke(cPath);
+
+            /* Final step:
+
+            Now we can iterate over each character in our text string,
+            drawing each character one by one by positioning it at the
+            nearest point along the interpolated path and rotating it
+            according to the angle of the slope at that point
+
+            */
+
+            // Important note: here, a monospace font is used;
+            // if using a non-fixed width font, performance may vary...!
+            context.font = "30px monospace";
+            context.fillStyle = "darkred";
+            context.textAlign = "center";
+
+            let position = 10;
+
+            textToDraw.split("").forEach(letter => {
+
+                // Calculate the width of the text
+                let w = context.measureText(letter).width;
+
+
+                // Update drawing position
+
+                // Find the closest point to the position
+                let closestPointIndex = d3.bisectRight(lengths, position + w);
+                let closestPoint = interpolated[closestPointIndex];
+
+                position = lengths[closestPointIndex];
+                // lengths = lengths.fill(null, 0, closestPointIndex+1);
+
+
+
+                context.save();
+                context.translate(closestPoint.x, closestPoint.y);
+                context.rotate(closestPoint.angle);
+                context.fillText(letter, 0, 0);
+                context.restore();
+            });
+
+
+        </script>
+    </body>
+</html>

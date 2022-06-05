@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+    <meta charset="UTF-8">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <head>
+        <style>
+            #chart {
+                width: 100%;
+                height: 100vh;
+                position: relative;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="chart"></div>
+        <script>
+        
+            /* DEFINE DIMENSIONS AND GENERATE SVG */
+            const width = document.querySelector("#chart").clientWidth;
+            const height = document.querySelector("#chart").clientHeight;
+            const svg = d3.select("#chart")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height);
+
+            /* DEFINE NODES IN SYSTEM */
+            const nodes = [
+                {id: "porcupine", category: "land"},
+                {id: "gorilla", category: "land"},
+                {id: "peacock", category: "land"},
+                {id: "flamingo", category: "land"},
+                {id: "emu", category: "land"},
+                {id: "walrus", category: "sea"},               
+                {id: "turtle", category: "sea"},               
+                {id: "penguin", category: "sea"},               
+                {id: "dolphin", category: "sea"},               
+                {id: "otter", category: "sea"}               
+            ];
+            
+            /* DEFINE LINKS BETWEEN NODES */
+            const links = [
+                {source: "porcupine", target: "gorilla"},
+                {source: "porcupine", target: "peacock"},
+                {source: "gorilla", target: "peacock"},
+                {source: "peacock", target: "flamingo"},
+                {source: "emu", target: "gorilla"},
+                {source: "walrus", target: "turtle"},
+                {source: "penguin", target: "turtle"},
+                {source: "penguin", target: "walrus"},
+                {source: "dolphin", target: "otter"},
+                {source: "dolphin", target: "penguin"},
+                // {source: "porcupine", target: "turtle"}
+            ];
+
+            /* 
+            INITIALIZE FORCE SIMULATION 
+            
+            For a full list of forceSimulation parameters and forces, see:
+            https://github.com/d3/d3-force/tree/v3.0.0
+
+            */
+            let simulation = d3.forceSimulation(nodes)
+                .force("link", d3.forceLink(links).id(d => d.id).distance(50).strength(1))
+                .force("charge", d3.forceManyBody().strength(-100))
+                .force("center", d3.forceCenter(width / 2, height / 2))
+                .force("collide", d3.forceCollide().radius(25));
+
+            /* DRAW THE LINES FOR LINKS */
+            let link = svg.append("g")
+                .selectAll("line")
+                .data(links)
+                .enter()
+                .append("line")
+                    .attr("stroke", "#666666")
+                    .attr("stroke-width",5);
+
+            /* 
+            DRAW THE CIRCLES FOR THE NODES
+
+            Why do we draw these after the links?
+
+            */
+            let node = svg.append("g")
+                .selectAll("circle")
+                .data(nodes)
+                .enter()
+                .append("circle")
+                    .attr("stroke", "#fff")
+                    .attr("stroke-width", 1.5)
+                    .attr("r", 15)
+                    .attr("fill", d => { 
+                        if(d.category === "land") {
+                            return "#F6C900";
+                        } else if(d.category === "sea") {
+                            return "darkcyan";
+                        }
+                    });
+
+            /* 
+            TICK THE SIMULATION 
+            
+            Each time the simulation iterates ("ticks"), we will
+            update the positions of the nodes (circles) and links (lines)
+            in the network
+            */
+
+            simulation.on("tick", () => {
+                link.attr("x1", function(d) { return d.source.x; })
+                    .attr("y1", function(d) { return d.source.y; })
+                    .attr("x2", function(d) { return d.target.x; })
+                    .attr("y2", function(d) { return d.target.y; });
+
+                node
+                    .attr("cx", function(d) { return d.x; })
+                    .attr("cy", function(d) { return d.y; });
+
+            });
+
+            /* ADD A TOOLTIP */
+            let tooltip = d3.select("#chart")
+                .append("div")
+                .attr("class","tooltip");
+
+            node.on("mouseover", (e,d) => {
+
+                console.log(d)
+                let cx = d.x + 20;
+                let cy = d.y - 10;
+
+                tooltip.style("visibility", "visible")
+                    .style("left", cx + "px")
+                    .style("top", cy + "px")
+                    .text(d.id);
+
+            }).on("mouseout", () => {
+                tooltip.style("visibility","hidden");
+            });
+
+        </script>
+    </body>
+</html>
+

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    html, body {
+      margin: 0px;
+      padding: 0px;
+      text-align: center;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    svg {
+      margin-top: 50px;
+    }
+
+    .axisLabel {
+      font-size: 16pt;
+      font-weight: bold;
+    }
+
+    text {
+      font-size: 12pt;
+    }
+
+</style>
+</head>
+<body>
+  <figure id="chart"></div>
+  <script>
+
+      /*
+      SETTING UP THE SVG CANVAS
+      */
+      const width = 800;
+      const height = 500;
+      const margin = {top: 25, left: 75, right: 25, bottom: 75};
+
+      /*
+      CREATE THE SVG CANVAS
+      */
+      const svg = d3.select("#chart")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+      /*
+      DEFINE DATA SET
+
+      Data taken from Gapminder, showing values of key socioeconomic indicators
+      for the year 2007
+
+      */
+      const data = [
+        {country: "United States",	continent: "Americas",	lifeExpectancy: 78.242,	population: 301139947,	gdpPercap: 42951.6531},
+        {country: "Canada", continent: "Americas", lifeExpectancy: 80.653, population: 33390141, gdpPercap: 36319.235},
+        {country: "China", continent: "Asia", lifeExpectancy: 72.961, population: 1318683096, gdpPercap: 4959.11485},
+        {country: "Australia", continent: "Oceania", lifeExpectancy: 81.235, population: 20434176, gdpPercap: 34435.3674},
+        {country: "Germany", continent: "Europe", lifeExpectancy: 79.406, population: 82400996, gdpPercap: 32170.3744},
+        {country: "France", continent: "Europe", lifeExpectancy: 80.657, population: 61083916, gdpPercap: 30470.0167},
+        {country: "Finland", continent: "Europe", lifeExpectancy: 79.313, population: 5238460, gdpPercap: 33207.0844},
+        {country: "Japan", continent: "Asia", lifeExpectancy: 82.603, population: 127467972, gdpPercap: 31656.0681},
+        {country: "Netherlands", continent: "Europe", lifeExpectancy: 79.762, population: 16570613, gdpPercap: 36797.9333},
+        {country: "Poland", continent: "Europe", lifeExpectancy: 75.563, population: 38518241, gdpPercap: 15389.9247},
+        {country: "Spain", continent: "Europe", lifeExpectancy: 80.941, population: 40448191, gdpPercap: 28821.0637},
+        {country: "Zimbabwe", continent: "Africa", lifeExpectancy: 43.487, population: 12311143, gdpPercap: 469.709298},
+        {country: "Botswana", continent: "Africa", lifeExpectancy: 50.728, population: 1639131, gdpPercap: 12569.8518}
+      ];
+
+      /*
+      DEFINE SCALES
+
+      D3 scales allow us to take raw data values -- in their original units --
+      and convert them into other kinds of values, e.g., pixel position
+      on the screen
+
+      There are MANY different kinds of D3 scales!
+      Here, we will demonstrate:
+        d3.scaleLinear(), for mapping `gdpPercap` to x-position
+          and `lifeExpectancy` to y-position
+
+        d3.scaleOrdinal(), for mapping `continent` to fill color
+
+        d3.scaleSqrt(), for mapping `population` to circle radius
+
+      */
+    
+      // Creating a scale for the x-axis, with gdpPercap data
+      const xScale = d3.scaleLinear()
+        .domain([0,43000])
+        .range([margin.left, width-margin.right]);
+
+      // Creating a scale for the y-axis, with lifeExpectancy data
+      const yScale = d3.scaleLinear()
+        .domain([0,85])
+        .range([height-margin.bottom, margin.top]);
+
+
+      /* We'll use d3.scaleOrdinal() to map 
+      the `continent` variable to a fill color */
+      const fillScale = d3.scaleOrdinal()
+        .domain(["Africa", "Americas", "Asia", "Europe", "Oceania"])
+        .range(["blue", "red", "green", "orange", "purple"]);
+
+      /* We'll use d3.scaleSqrt() to map 
+      the `population` variable to a radius size */
+      const rScale = d3.scaleSqrt()
+        .domain([0, 1318683096])
+        .range([0, 30]);
+
+
+      /*
+      DRAW THE MARKS
+
+      Finally, we will draw circles for our scatter plot --
+      using the forEach method!
+
+      */
+
+      data.forEach(function(d) {
+
+        svg.append("circle")
+          .attr("cx", xScale(d.gdpPercap))
+          .attr("cy", yScale(d.lifeExpectancy))
+          .attr("r", rScale(d.population))
+          .attr("fill", fillScale(d.continent))
+          .attr("stroke", fillScale(d.continent))
+          .attr("fill-opacity", 0.6);
+
+      });
+
+
+      /*
+      GENERATE AXES
+
+      D3 has built in "axis constructors" that will automatically draw
+      an axis for us, complete with tick marks and labels; these are built
+      from scales we define elsewhere in the code, such as in the
+      previous section
+
+      */
+      const xAxis = svg.append("g")
+        .attr("transform",`translate(0,${height-margin.bottom})`)
+        .call(d3.axisBottom().scale(xScale));
+
+      const yAxis = svg.append("g")
+        .attr("transform",`translate(${margin.left},0)`)
+        .call(d3.axisLeft().scale(yScale));
+
+
+      /* ADDING AXIS LABELS */
+      svg.append("text")
+        .attr("class","axisLabel")
+        .attr("x", margin.left + (width-margin.left-margin.right)/2)
+        .attr("y", height - 20)
+        .attr("text-anchor","middle")
+        .text("GDP per Capita");
+
+      svg.append("text")
+        .attr("class","axisLabel")
+        .attr("x", -height/2)
+        .attr("y", 20)
+        .attr("text-anchor","middle")
+        .attr("transform","rotate(-90)")
+        .text("Life Expectancy (Years)");
+
+
+  </script>
+</body>
+</html>

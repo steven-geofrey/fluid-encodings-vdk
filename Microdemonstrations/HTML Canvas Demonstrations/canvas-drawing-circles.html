@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://d3js.org/d3.v6.min.js"></script>
+    </head>
+    <body>
+        <div id="canvas"></div>
+        <script>
+
+            const width = 1000;
+            const height = 800;
+
+
+            const canvas = d3.select("#canvas")
+                .append("canvas")
+                .attr("width", width)
+                .attr("height", height);
+
+            let context = canvas.node().getContext("2d");
+
+
+            context.strokeStyle = '#446688';
+            context.fillStyle = '#F6C900';
+            context.lineWidth = 2;
+
+
+            let circles = [];
+            let draw = false;
+
+            canvas.on("mousedown", event => {
+                draw = true;
+            });
+
+            canvas.on("mouseup", event => {
+                let angles = validateCircle(coordinates);
+                if(angles.length == 0) {
+                    draw = false;
+                    coordinates = [];
+                    return false;
+                }
+
+                angles.sort((a,b) => a - b);
+                let extent = d3.extent(angles);
+
+                // Why aren't we comparing the extent to 2*Math.PI here?
+                if(extent[1] - extent[0] >= 6) {
+                    let c = d3.polygonCentroid(coordinates);
+                    let r = d3.mean(coordinates, d => { return computeDistance(c, d); });
+                    circles.push({center: c, radius: r});
+                }
+
+                draw = false;
+                coordinates = [];
+                redraw();
+
+            });
+
+            let coordinates = [];
+
+            let line = d3.line()
+                .x(d => d[0])
+                .y(d => d[1]);
+
+
+            // Why are we attaching the mousemove event to `canvas`, not `context`?
+            canvas.on("mousemove", event => {
+
+                if (!draw) return false;
+
+                let cx = d3.pointer(event)[0];
+                let cy = d3.pointer(event)[1];
+
+                coordinates.push([cx,cy]);
+
+                redraw();
+
+
+            });
+
+
+            function validateCircle(coords) {
+
+                if(coords.length < 5) return false;
+
+                let angles = [];
+
+                let control = d3.polygonCentroid(coordinates);
+
+                coords.forEach(c => {
+                    let distance = computeDistance(control, c);
+                    let ydiff = Math.abs(control[1]-c[1]);
+                    let angle = Math.asin(ydiff/distance);
+                    
+                    let qx = (c[0]-control[0])/Math.abs(c[0]-control[0]);
+                    let qy = (c[1]-control[1])/Math.abs(c[1]-control[1]);
+
+
+                    if(qx == 1 && qy == 1) {
+                        angle = angle;
+                    } else if(qx == 1 && qy == -1) {
+                        angle = 2*Math.PI - angle;
+                    } else if(qx == -1 && qy == 1) {
+                        angle = Math.PI - angle;
+                    } else if(qx == -1 && qy == -1) {
+                        angle = Math.PI + angle;
+                    }
+
+                    angles.push(angle);
+
+                    
+                });
+
+                return angles;
+            }
+
+            function computeDistance(p1,p2) {
+                return Math.sqrt(Math.pow(p1[0]-p2[0],2) + Math.pow(p1[1]-p2[1],2));
+            }
+
+            function redraw() {
+                context.clearRect(0, 0, width, height);
+
+                circles.forEach(circle => {
+                    context.beginPath();
+                    context.arc(circle.center[0], circle.center[1], circle.radius, 0, 2*Math.PI);
+                    context.stroke();
+                    context.closePath();
+                });
+
+                if(coordinates.length > 0) {
+                    let path = new Path2D(line(coordinates));
+                    context.stroke(path);
+                }
+            }
+
+        </script>
+    </body>
+</html>

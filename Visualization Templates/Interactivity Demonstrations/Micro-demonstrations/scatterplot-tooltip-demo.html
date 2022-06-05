@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://d3js.org/d3.v7.js"></script>
+  <style>
+    html, body {
+      margin: 0px;
+      padding: 0px;
+      font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    }
+
+    #chart {
+        width: 100%;
+        height: 80vh;
+        margin: 0px;
+        padding: 0px;
+        position: relative;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .axisLabel {
+      font-size: 16pt;
+      font-weight: bold;
+    }
+
+    .axis {
+      font-size: 12pt;
+    }
+
+    /* 
+    The following CSS rule is used to style a tooltip div that is later created by D3;
+    Note that this relies on several CSS properties:
+      - the tooltip div must have position: absolute;
+      - the container for the tooltip (above, #chart) must have position: relative;
+      - we position the tooltip div through the top and left properties, which are relative to the top and left edges of the container (#chart)
+    */
+
+    .tooltip {
+        /* THE FOLLOWING PROPERTIES
+        ARE REQUIRED TO MAKE THE TOOLTIP
+        WORK CORRECTLY */
+        position: absolute;
+        left: 0px;
+        top: 0px;
+        visibility: hidden;
+        pointer-events: none;
+        
+        /* THE FOLLOWING PROPERTIES ARE
+        OPTIONAL AND AESTHETIC */
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-size: 14pt;
+        background-color:rgba(255, 238, 126, 0.5);
+        padding: 2px;
+    }
+
+</style>
+</head>
+<body>
+  <h1>Honey Production in Vermont, 1998 - 2012</h1>
+  <div id="chart"></div>
+  <script>
+
+      /*
+      SETTING UP THE SVG CANVAS
+      */
+      const width = document.querySelector("#chart").clientWidth;
+      const height = document.querySelector("#chart").clientHeight;
+      const margin = {top: 25, left: 175, right: 100, bottom: 75};
+
+      /*
+      CREATE THE SVG CANVAS
+      */
+      const svg = d3.select("#chart")
+        .append("svg")
+        .attr("width",width)
+        .attr("height", height);
+
+      /*
+      DEFINE DATA SET
+
+      The following data set shows total honey production per year in 
+      the state of Vermont; these data are extracted from the following
+      data set on Kaggle:
+
+      https://www.kaggle.com/jessicali9530/honey-production      
+
+      */
+
+      const data = [
+        {year: 1998, production: 384000},
+        {year: 1999, production: 396000},
+        {year: 2000, production: 413000},
+        {year: 2001, production: 567000},
+        {year: 2002, production: 623000},
+        {year: 2003, production: 581000},
+        {year: 2004, production: 408000},
+        {year: 2005, production: 546000},
+        {year: 2006, production: 336000},
+        {year: 2007, production: 320000},
+        {year: 2008, production: 330000},
+        {year: 2009, production: 245000},
+        {year: 2010, production: 260000},
+        {year: 2011, production: 172000},
+        {year: 2012, production: 240000}
+      ];
+
+
+      /*
+      DEFINE SCALES
+
+      The scale for the x-axis will map each YEAR in the data set
+      to x-position;
+
+      the scale for the y-axis will map TOTAL HONEY PRODUCTION
+      to y-position.
+
+      In this example, both scales use d3.scaleLinear().
+
+      */
+
+      const xScale = d3.scaleLinear()
+        .domain([1998,2012])
+        .range([margin.left, width-margin.right]);
+
+      const yScale = d3.scaleLinear()
+        .domain([0,700000])
+        .range([height-margin.bottom, margin.top]);
+
+      /*
+      CREATE A LINE GENERATOR
+
+      To create a line chart in D3, we need to use a "line generator"
+      function that's built into the D3 language.
+
+      This line generator function can be invoked with d3.line().
+
+      The purpose of this generator will be to accept as input a series
+      of x- and y-coordinate values, based on the data set, and to return
+      as output a complete specification for an SVG "path" element.
+
+      The d3.line().x() method controls how to compute the x-position
+      of each point in the line we are creating; the d3.line().y() method 
+      controls how to compute the y-position of each point in the line.
+      Both of these methods are given accessor functions.
+
+      In the example below, we are mapping the `year` property
+      as the x-coordinate, and the `production` property as the
+      y-coordinate for each point in the line.
+
+      See the API for more information:
+      https://github.com/d3/d3-shape/blob/v2.0.0/README.md#lines
+
+      */
+      const line = d3.line()
+        .x(function(d) { return xScale(d.year); })
+        .y(function(d) { return yScale(d.production); })
+        .curve(d3.curveLinear);
+
+
+      /*
+      GENERATE AXES
+
+      D3 has built in "axis constructors" that will automatically draw
+      an axis for us, complete with tick marks and labels; these are built
+      from scales we define elsewhere in the code, such as in the
+      previous section
+
+      */
+      const xAxis = svg.append("g")
+        .attr("class", "axis")
+        .attr("transform",`translate(0,${height-margin.bottom})`)
+        .call(d3.axisBottom().scale(xScale).tickFormat(d3.format("Y")));
+
+      const yAxis = svg.append("g")
+        .attr("class", "axis")
+        .attr("transform",`translate(${margin.left},0)`)
+        .call(d3.axisLeft().scale(yScale));
+
+      /*
+      DRAW THE MARKS
+
+      In this visualization, we will do two things:
+
+      We'll first draw the line for our line chart, by appending a
+      new "path" element to the SVG canvas and computing its geometry
+      (through the "d" attribute) with the help of our line generator
+      function above.
+
+      Then, after that, we'll draw circles for each point on top
+      of the line we've drawn. We're doing this so that we can
+      later create a tooltip with these points.
+
+      */
+
+      const path = svg.append("path")
+        .datum(data)
+          .attr("d", function(d) { return line(d); })
+          .attr("stroke","steelblue")
+          .attr("fill","none")
+          .attr("stroke-width",2);
+
+      const circle = svg.selectAll("circle")
+        .data(data)
+        .enter()
+        .append("circle")
+          .attr("cx", function(d) { return xScale(d.year); })
+          .attr("cy", function(d) { return yScale(d.production); })
+          .attr("r",10)
+          .attr("fill","steelblue");
+
+
+      /*
+      ADDING AXIS LABELS
+
+      */
+      svg.append("text")
+        .attr("class","axisLabel")
+        .attr("x", width/2)
+        .attr("y", height - 10)
+        .attr("text-anchor","middle")
+        .text("Year");
+
+      svg.append("text")
+        .attr("class","axisLabel")
+        .attr("x", -height/2)
+        .attr("y", 50)
+        .attr("text-anchor","middle")
+        .attr("transform","rotate(-90)")
+        .text("Total Production (lbs)");
+
+    /*
+    SIMPLE TOOLTIP
+
+    We begin by creating a new div element inside the #chart container, 
+    giving it class 'tooltip'; note that this newly created div inherits 
+    (receives) the CSS properties defined by the .tooltip { ... } rule 
+    in the stylesheet
+
+    */ 
+
+    const tooltip = d3.select("#chart")
+        .append("div")
+        .attr("class","tooltip"); // IMPORTANT! SEE THE CSS PROPERTIES FOR THIS CLASS!
+
+    /*
+    When we hover over any of the circles in the SVG, update the 
+    tooltip position and text contents;
+    
+    note that `circle` here is a reference to the variable named 
+    `circle` above (what is in that selection?)
+    */
+
+    /* Start this demonstration with `mouseover` and `mouseout`
+    to only change the appearance of the circle; then, add tooltip */
+  
+    circle.on("mouseover", function(e, d) {
+
+
+
+        // Update style and position of the tooltip div;
+        // what are the `+` symbols doing? why are we adding +20 and subtracting -10?
+        let cx = +d3.select(this).attr("cx")+20;
+        let cy = +d3.select(this).attr("cy")-10;
+
+        tooltip.style("visibility","visible")  // make the tooltip visible
+            .style("left", `${cx}px`)          // adjust the left (x) position of the tooltip
+            .style("top", `${cy}px`)           // adjust the top (y) position of the tooltip
+            .html(`<b>Year:</b> ${d.year}<br><b>Production</b>: ${d.production} lbs`); // update the text of the tooltip
+
+        // OPTIONALLY, also highlight the circle:
+        d3.select(this)
+            .attr("stroke","#F6C900")
+            .attr("stroke-width",2);
+
+    }).on("mouseout", function() {
+
+        // Make the tooltip invisible when mouse leaves circle
+        tooltip.style("visibility","hidden");
+
+        // OPTIONALLY, reset visual appearance of highlighted circle
+        d3.select(this)
+            .attr("stroke","none")
+            .attr("stroke-width",0);
+            
+    });
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Zooming Example</title>
+        <script src="https://d3js.org/d3.v6.min.js"></script>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <div id="options">
+            <h1>Museums in the Northeast</h1>
+            <p>Use the filters below to hide or show different types of museums</p>
+            <div id="filters">
+                <input type="checkbox" class="type--option" value="GENERAL MUSEUM" checked> General Museum <br>
+                <input type="checkbox" class="type--option" value="ART MUSEUM" checked> Art Museum <br>
+                <input type="checkbox" class="type--option" value="HISTORY MUSEUM" checked> History Museum <br>
+                <input type="checkbox" class="type--option" value="SCIENCE & TECHNOLOGY MUSEUM OR PLANETARIUM" checked> Science and Technology Museum <br>
+                <input type="checkbox" class="type--option" value="NATURAL HISTORY MUSEUM" checked> Natural History Museum <br>
+                <input type="checkbox" class="type--option" value="CHILDREN'S MUSEUM" checked> Children's Museum <br>
+            </div>
+        </div>
+        <div id="chart"></div>
+        <script src="./script.js"></script>
+    </body>
+</html>

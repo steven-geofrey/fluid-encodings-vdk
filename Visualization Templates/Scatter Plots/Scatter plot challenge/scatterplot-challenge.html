@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://d3js.org/d3.v6.js"></script>
+  <style>
+      html, body {
+        margin: 0px;
+        padding: 0px;
+        text-align: center;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      svg {
+        margin-top: 50px;
+      }
+
+      .axisLabel {
+        font-size: 16pt;
+        font-weight: bold;
+      }
+
+      text {
+        font-size: 12pt;
+      }
+
+  </style>
+</head>
+<body>
+  <h1>Rents and Income in Boston Neighborhoods</h1>
+  <figure id="chart"></figure>
+  <script>
+
+      /*
+      SETTING UP THE SVG CANVAS
+      */
+      const width = 800;
+      const height = 500;
+      const margin = {top: 25, left: 100, right: 25, bottom: 100};
+
+      /*
+      CREATE THE SVG CANVAS
+      */
+      const canvas = d3.select("#chart")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+
+
+      /*
+      DEFINE DATA SET
+
+      Data taken from the following websites:
+
+      Median rent for one-bedroom apartment, Winter 2020
+      https://realestate.boston.com/renting/2020/01/23/median-rent-every-boston-neighborhood/
+      
+      Median household income, in thousands of dollars (last updated November 2020)
+      https://statisticalatlas.com/neighborhood/Massachusetts/Boston/South-Boston/Household-Income
+
+      Population by neighborhood, in thousands:
+      https://statisticalatlas.com/neighborhood/Massachusetts/Boston/South-Boston/Population
+
+      */
+      const neighborhoods = [
+          {area: "Back Bay", rent: 3000, income: 97.8, population: 21.88, primaryAge: "Younger Adult"},
+          {area: "Charlestown", rent: 2500, income: 94.6, population: 16.44, primaryAge: "Younger Adult"},
+          {area: "Chinatown", rent: 3400, income: 121.0, population: 6.87, primaryAge: "College"},
+          {area: "Downtown", rent: 3330, income: 168.6, population: 1.98, primaryAge: "Younger Adult"},
+          {area: "Fenway", rent: 2440, income: 37.9, population: 21.17, primaryAge: "College"},
+          {area: "Mission Hill", rent: 1890, income: 37.3, population: 13.93, primaryAge: "College"},
+          {area: "North End", rent: 2300, income: 98.5, population: 10.61, primaryAge: "Younger Adult"},
+          {area: "Allston", rent: 2200, income: 52.1, population: 28.82, primaryAge: "College"},
+          {area: "Brighton", rent: 1990, income: 65.7, population: 45.98, primaryAge: "College"},
+          {area: "Dorchester", rent: 1950, income: 62.2, population: 60.79, primaryAge: "Younger Adult"},
+          {area: "Jamaica Plain", rent: 2050, income: 84.0, population: 41.26, primaryAge: "Younger Adult"},
+          {area: "Roxbury", rent: 2200, income: 32.3, population: 52.53, primaryAge: "Younger Adult"},
+          {area: "South Boston", rent: 2600, income: 89.1, population: 33.69, primaryAge: "Younger Adult"},
+          {area: "West Roxbury", rent: 2100, income: 90.5, population: 30.44, primaryAge: "Younger Adult"}
+      ];
+
+      /*
+      TASK 1: DEFINE SCALES
+
+      The goal for this challenge is to draw a scatter plot using the 
+      data about Boston neighborhoods above.
+
+      To start, create 4 different scales that will be used to map the variables
+      in the data set to channels of the visual encodings in the chart.
+
+      Your scales should include the following:
+
+      d3.scaleLinear(), to map the value of `income` to the x-position of
+        the circles in the scatter plot
+
+      d3.scaleLinear(), to map the value of `rent` to the y-position of
+        the circles in the scatter plot
+
+      d3.scaleOrdinal(), to map the value of `primaryAge` to the
+        fill color of the circles
+
+      d3.scaleSqrt(), to map the value of `population` to the
+        radius of the circles
+
+      */
+
+      let xScale = d3.scaleLinear()
+        .domain([0, 170])
+        .range([margin.left, width-margin.right]);
+
+      let yScale = d3.scaleLinear()
+        .domain([0, 3500])
+        .range([height-margin.bottom, margin.top]);
+
+      let rScale = d3.scaleSqrt()
+        .domain([0, 65])
+        .range([0, 15]);
+
+      let fillScale = d3.scaleOrdinal()
+        .domain(["Younger Adult", "College"])
+        .range(["#446688", "#CC0000"]);
+
+
+
+      /*
+      TASK 2: DRAW THE MARKS
+
+      Next, use the .forEach() pattern to draw a circle for
+      each neighborhood in the data set.
+
+      The circles must include the following attributes:
+
+        cx: scaled according to the value of `income`
+          for each neighborhood
+
+        cy: scaled according to the value of `rent`
+
+        r: scaled according to the value of `population`
+
+        fill: scaled according to the value of `primaryAge`
+
+        stroke: scaled according to the value of `primaryAge`
+
+        fill-opacity: any value between 0 and 1
+
+
+      */
+
+
+      neighborhoods.forEach(function(d) {
+
+        canvas.append("circle")
+          .attr("cx", xScale(d.income))
+          .attr("cy", yScale(d.rent))
+          .attr("r", rScale(d.population))
+          .attr("fill", fillScale(d.primaryAge))
+          .attr("stroke", fillScale(d.primaryAge))
+          .attr("fill-opacity", 0.6);
+
+
+      });
+
+
+
+      /* DRAW AXES */
+
+      // const xAxis = canvas.append("g")
+      //   .attr("transform",`translate(0,${height-margin.bottom})`)
+      //   .call(d3.axisBottom().scale(xScale).tickFormat(d3.format("$,")));
+
+      // const yAxis = canvas.append("g")
+      //   .attr("transform",`translate(${margin.left},0)`)
+      //   .call(d3.axisLeft().scale(yScale).tickFormat(d3.format("$,")));
+
+
+      const xAxis = canvas.append("g")
+        .attr("transform", `translate(0, ${height-margin.bottom})`)
+        .call(d3.axisBottom().scale(xScale));
+      
+      const yAxis = canvas.append("g")
+        .attr("transform", `translate(${margin.left},0)`)
+        .call(d3.axisLeft().scale(yScale));
+
+
+
+      /* ADDING AXIS LABELS */
+      canvas.append("text")
+        .attr("class","axisLabel")
+        .attr("x", margin.left + (width-margin.left-margin.right)/2)
+        .attr("y", height - 20)
+        .attr("text-anchor","middle")
+        .text("Median Income (USD, Thousands)");
+
+      canvas.append("text")
+        .attr("class","axisLabel")
+        .attr("x", -(height-margin.bottom)/2)
+        .attr("y", 20)
+        .attr("text-anchor","middle")
+        .attr("transform","rotate(-90)")
+        .text("Median Rent (USD)");
+
+
+
+  </script>
+</body>
+</html>

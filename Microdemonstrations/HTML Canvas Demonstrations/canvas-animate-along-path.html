@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://d3js.org/d3.v6.min.js"></script>
+    </head>
+    <body>
+        <div id="canvas"></div>
+        <script>
+
+            const width = 1000;
+            const height = 800;
+            const margin = 100;
+
+            const canvas = d3.select("#canvas")
+                .append("canvas")
+                .attr("width", width)
+                .attr("height", height);
+
+            let context = canvas.node().getContext("2d");
+
+
+            let n = 10; // Number of randomly-generated control points
+
+            let yp = d3.scalePoint()
+                .domain(d3.range(1,n+1,1))
+                .range([margin, height - margin]);
+
+            let controlPoints = [];
+
+            for(let i = 1; i <= n; i++) {
+                let x = margin + Math.random()*(width - 2*margin);
+                let y = yp(i);
+                controlPoints.push({x: x, y: y});            
+            }
+
+            const line = d3.line()
+                .x(d => d.x)
+                .y(d => d.y)
+                .curve(d3.curveBasis);
+
+            context.strokeStyle = '#446688';
+
+            let duration = 5000;
+
+
+            /* Draw control points */
+            let ni = 100; // How does changing this number affect the animation? Why?
+            let px = controlPoints.map(p => p.x);
+            let py = controlPoints.map(p => p.y);
+            let ibx = d3.interpolateBasis(px)
+            let iby = d3.interpolateBasis(py);
+            let interpolated = d3.zip(d3.quantize(ibx, n*ni), d3.quantize(iby, n*ni));
+
+
+            let qi = d3.scaleQuantize()
+                .range(d3.range(0,n*ni,1));
+
+            context.strokeStyle = "#446688";
+            context.fillStyle = "#F6C900";
+
+            context.lineWidth = 3;
+
+
+            let timer = d3.timer(elapsed => {
+
+                let t = Math.min(1, d3.easeLinear(elapsed/duration));
+
+                let q = qi(t);
+                
+
+                context.clearRect(0, 0, width, height);
+
+
+                let pathd = new Path2D(line(controlPoints));
+                context.stroke(pathd);
+
+                let currentLocation = interpolated[q];
+                context.beginPath();
+                context.arc(currentLocation[0], currentLocation[1], 10, 0, 2*Math.PI);
+                context.fill();
+                context.endPath();
+
+
+                if (t >= 1) timer.stop();
+
+            });
+
+
+
+        </script>
+    </body>
+</html>

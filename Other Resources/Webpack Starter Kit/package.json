@@ -1,0 +1,13 @@
+{
+  "name": "webpack-starter-kit",
+  "version": "1.0.0",
+  "description": "A starter kit for developing Webpack-based projects",
+  "main": "./src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack",
+    "dev": "webpack serve --open"
+  },
+  "author": "Steven Geofrey",
+  "license": "ISC"
+}

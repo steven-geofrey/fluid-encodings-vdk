@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+      .axisLabel {
+        font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+        font-size: 16pt;
+        font-weight: bold;
+      }
+
+      .axis {
+        font-size: 12pt;
+      }
+  </style>
+</head>
+<body>
+  <script>
+    /*
+    DEFINE DIMENSIONS AND GENERATE SVG CANVAS
+    */
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const margin = {top: 100, left: 200, right: 100, bottom: 100};
+    const svg = d3.select("body")
+      .append("svg")
+      .attr("width",width)
+      .attr("height",height);
+
+
+    /*
+    DEFINE DATA SETS
+
+    Data taken from the following websites:
+
+    Median rent for one-bedroom apartment, Fall 2018 to Spring 2019
+    http://realestate.boston.com/renting/2019/02/19/median-one-bedroom-rent-price/
+
+    Median household income, in thousands of dollars (last updated October 2019)
+    https://statisticalatlas.com/neighborhood/Massachusetts/Boston/South-Boston/Household-Income
+
+    In first dataset, `fall2018`, `rent` is the median rent for one-bedroom apartments in Fall 2018
+    */
+    const fall2018 = [
+        {area: "Back Bay", rent: 2800, income: 97.8},
+        {area: "Charlestown", rent: 2500, income: 94.6},
+        {area: "Chinatown", rent: 2910, income: 121.0},
+        {area: "Downtown", rent: 3070, income: 168.6},
+        {area: "Fenway", rent: 2350, income: 37.9},
+        {area: "Mission Hill", rent: 1900, income: 37.3},
+        {area: "North End", rent: 2300, income: 98.5},
+        {area: "Allston", rent: 2150, income: 52.1},
+        {area: "Brighton", rent: 1800, income: 65.7},
+        {area: "Dorchester", rent: 1800, income: 62.2},
+        {area: "Jamaica Plain", rent: 1900, income: 84.0},
+        {area: "Roxbury", rent: 1610, income: 32.3},
+        {area: "South Boston", rent: 2900, income: 89.1},
+        {area: "West Roxbury", rent: 1810, income: 90.5}
+    ];
+
+    /*
+    Define the second data set;
+    here, `rent` is the median rent for a one-bedroom apartment in Spring 2019
+
+    NOTICE:
+      `spring2019` HAS 3 ADDITIONAL DATA POINTS: for South End, Roslindale, and East Boston
+      AND THE DATA POINTS FOR Mission Hill AND Roxbury HAVE BEEN REMOVED
+    */
+    const spring2019 = [
+        {area: "Back Bay", rent: 2920, income: 97.8},
+        {area: "Charlestown", rent: 2585, income: 94.6},
+        {area: "Chinatown", rent: 3210, income: 121.0},
+        {area: "Downtown", rent: 3325, income: 168.6},
+        {area: "Fenway", rent: 2400, income: 37.9},
+        {area: "North End", rent: 2350, income: 98.5},
+        {area: "Allston", rent: 1900, income: 52.1},
+        {area: "Brighton", rent: 1950, income: 65.7},
+        {area: "Dorchester", rent: 1700, income: 62.2},
+        {area: "Jamaica Plain", rent: 1950, income: 84.0},
+        {area: "South Boston", rent: 2840, income: 89.1},
+        {area: "West Roxbury", rent: 1810, income: 90.5},
+        {area: "South End", rent: 2700, income: 69.9},
+        {area: "Roslindale", rent: 1600, income: 77.9},
+        {area: "East Boston", rent: 1900, income: 54.9}
+    ];
+
+    /*
+    DEFINE SCALES
+    */
+    const xScale = d3.scaleLinear()
+      .domain([0,170])
+      .range([margin.left, width-margin.right]);
+
+    const yScale = d3.scaleLinear()
+      .domain([0,3500])
+      .range([height-margin.bottom, margin.top]);
+
+    /*
+    DRAW AXES
+    */
+    const xAxis = svg.append("g")
+      .attr("class","axis")
+      .attr("transform",`translate(0, ${height-margin.bottom})`)
+      .call(d3.axisBottom().scale(xScale).tickFormat(d3.format("$")));
+
+    const yAxis = svg.append("g")
+      .attr("class","axis")
+      .attr("transform",`translate(${margin.left},0)`)
+      .call(d3.axisLeft().scale(yScale).tickFormat(d3.format("$")));
+
+    /*
+    DRAW AXIS LABELS
+    */
+    const xAxisLabel = svg.append("text")
+      .attr("class","axisLabel")
+      .attr("x", width/2)
+      .attr("y", height-margin.bottom/2)
+      .attr("text-anchor","middle")
+      .text("Median Income (Thousands)");
+
+    const yAxisLabel = svg.append("text")
+      .attr("class","axisLabel")
+      .attr("transform","rotate(-90)")
+      .attr("x",-height/2)
+      .attr("y",margin.left/2)
+      .attr("text-anchor","middle")
+      .text("Median Rent");
+
+    /*
+    DRAW POINTS FOR SCATTER PLOT WITH THE INITIAL DATASET `fall2018`
+    */
+    let circle = svg.selectAll("circle")
+        .data(fall2018)
+        .enter()
+        .append("circle")
+            .attr("cx", function(d) { return xScale(d.income); })
+            .attr("cy", function(d) { return yScale(d.rent); })
+            .attr("r", 10)
+            .attr("fill","steelblue");
+
+    /*
+    USE THE DATA UPDATE PATTERN AND A TRANSITION TO JOIN `spring2019` DATA TO THE CIRCLES
+    The transition should last 1.5 second and should be delayed by 1 second
+    */
+
+    let c = svg.selectAll("circle")
+        .data(spring2019, function(d) { return d.area; });
+
+    c.enter().append("circle")
+        .attr("cx", function(d) { return xScale(d.income); })
+        .attr("cy", function(d) { return yScale(d.rent); })
+        .attr("r", 0)
+        .attr("fill","steelblue")
+      .merge(c)
+        .transition() // a transition makes the changes visible...
+        .duration(1500)
+        .delay(1000)
+        .attr("cx", function(d) { return xScale(d.income); })
+        .attr("cy", function(d) { return yScale(d.rent); })
+        .attr("r", 10)
+        .attr("fill","steelblue");
+
+    c.exit()
+      .transition()
+      .duration(1500)
+      .delay(1000)
+      .attr("r",0)
+      .remove();
+
+
+  </script>
+
+</body>
+</html>

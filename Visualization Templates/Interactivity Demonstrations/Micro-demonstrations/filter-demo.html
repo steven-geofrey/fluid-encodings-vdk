@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://d3js.org/d3.v7.js"></script>
+  <style>
+    html, body {
+      margin: 0px;
+      padding: 0px;
+      font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    #container {
+      width: 100%;
+      height: 80vh;
+      display: flex;
+      flex-direction: row;
+
+    }
+
+    #options {
+      flex: 1 0 20%;
+      padding-left: 50px;
+      font-size: 14pt;
+      line-height: 26pt;
+    }
+
+    #chart {
+      flex: 1 0 80%;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .axisLabel {
+      font-size: 16pt;
+      font-weight: bold;
+    }
+
+    .axis {
+      font-size: 12pt;
+    }
+
+</style>
+</head>
+<body>
+  <div id="container">
+    <div id="options">
+      <h2>Filter by region</h2>
+      <input type="checkbox" class="region--option" value="Northeast" checked> Northeast <br>
+      <input type="checkbox" class="region--option" value="Midwest" checked> Midwest <br>
+      <input type="checkbox" class="region--option" value="South" checked> South <br>
+      <input type="checkbox" class="region--option" value="Southwest" checked> Southwest <br>
+      <input type="checkbox" class="region--option" value="West" checked> West 
+    </div>
+    <div id="chart">
+      <h1>Honey Production by Region in 2008</h1>
+    </div>
+  </div>
+  <script>
+
+      /*
+      SETTING UP THE SVG CANVAS
+      */
+      const width = document.querySelector("#chart").clientWidth;
+      const height = document.querySelector("#chart").clientHeight;
+      const margin = {top: 25, left: 175, right: 100, bottom: 75};
+
+      /*
+      CREATE THE SVG CANVAS
+      */
+      const svg = d3.select("#chart")
+        .append("svg")
+        .attr("width",width)
+        .attr("height", height);
+
+      /*
+      DEFINE DATA SET
+
+      The following data set shows total honey production and number of bee colonies
+      in different US states in the year 2008; these data are extracted from the following
+      data set on Kaggle:
+
+      https://www.kaggle.com/jessicali9530/honey-production      
+
+      */
+
+      const data = [
+        {state: "AL", numcol: 8000, production: 432000, region: "South"},
+        {state: "AZ", numcol: 22000, production: 1012000, region: "Southwest"},
+        {state: "AR", numcol: 25000, production: 1575000, region: "South"},
+        {state: "CA", numcol: 330000, production: 11550000, region: "West"},
+        {state: "CO", numcol: 25000, production: 1200000, region: "West"},
+        {state: "FL", numcol: 193000, production: 12352000, region: "South"},
+        {state: "GA", numcol: 59000, production: 3009000, region: "South"},
+        {state: "ID", numcol: 92000, production: 2944000, region: "West"},
+        {state: "IL", numcol: 7000, production: 427000, region: "Midwest"},
+        {state: "IN", numcol: 8000, production: 472000, region: "Midwest"},
+        {state: "IA", numcol: 37000, production: 2257000, region: "Midwest"},
+        {state: "KS", numcol: 6000, production: 330000, region: "Midwest"},
+        {state: "KY", numcol: 5000, production: 255000, region: "South"},
+        {state: "LA", numcol: 41000, production: 3526000, region: "South"},
+        {state: "ME", numcol: 4000, production: 136000, region: "Northeast"},
+        {state: "MI", numcol: 73000, production: 4161000, region: "Midwest"},
+        {state: "MN", numcol: 125000, production: 8375000, region: "Midwest"},
+        {state: "MS", numcol: 18000, production: 2124000, region: "South"},
+        {state: "MO", numcol: 7000, production: 371000, region: "Midwest"},
+        {state: "MT", numcol: 145000, production: 7540000, region: "West"},
+        {state: "NE", numcol: 43000, production: 2795000, region: "Midwest"},
+        {state: "NJ", numcol: 14000, production: 462000, region: "Northeast"},
+        {state: "NM", numcol: 5000, production: 260000, region: "Southwest"},
+        {state: "NY", numcol: 51000, production: 2601000, region: "Northeast"},
+        {state: "NC", numcol: 13000, production: 507000, region: "South"},
+        {state: "ND", numcol: 480000, production: 33120000, region: "Midwest"},
+        {state: "OH", numcol: 18000, production: 1080000, region: "Midwest"},
+        {state: "OR", numcol: 60000, production: 1920000, region: "West"},
+        {state: "PA", numcol: 16000, production: 960000, region: "Northeast"},
+        {state: "SD", numcol: 260000, production: 16380000, region: "Midwest"},
+        {state: "TN", numcol: 6000, production: 366000, region: "South"},
+        {state: "TX", numcol: 92000, production: 4784000, region: "South"},
+        {state: "UT", numcol: 25000, production: 950000, region: "West"},
+        {state: "VT", numcol: 4000, production: 240000, region: "Northeast"},
+        {state: "VA", numcol: 4000, production: 164000, region: "South"},
+        {state: "WA", numcol: 62000, production: 2542000, region: "West"},
+        {state: "WV", numcol: 6000, production: 288000, region: "South"},
+        {state: "WI", numcol: 60000, production: 4140000, region: "Midwest"},
+        {state: "WY", numcol: 50000, production: 2550000, region: "West"}
+      ];
+
+
+      /*
+      DEFINE SCALES
+
+      The scale for the x-axis will map NUMBER OF COLONIES to x-position;
+
+      the scale for the y-axis will map TOTAL HONEY PRODUCTION
+      to y-position.
+
+      In this example, both scales use d3.scaleLinear().
+
+      */
+
+      const xScale = d3.scaleLinear()
+        .domain([0,500000])
+        .range([margin.left, width-margin.right]);
+
+      const yScale = d3.scaleLinear()
+        .domain([0,35000000])
+        .range([height-margin.bottom, margin.top]);
+
+      const colorScale = d3.scaleOrdinal()
+        .domain(["Northeast", "Midwest", "South", "Southwest", "West"])
+        .range(['#66c2a5','#fc8d62','#8da0cb','#e78ac3','#a6d854']);
+
+      /*
+      GENERATE AXES
+
+      D3 has built in "axis constructors" that will automatically draw
+      an axis for us, complete with tick marks and labels; these are built
+      from scales we define elsewhere in the code, such as in the
+      previous section
+
+      */
+      const xAxis = svg.append("g")
+        .attr("class", "axis")
+        .attr("transform",`translate(0,${height-margin.bottom})`)
+        .call(d3.axisBottom().scale(xScale));
+
+      const yAxis = svg.append("g")
+        .attr("class", "axis")
+        .attr("transform",`translate(${margin.left},0)`)
+        .call(d3.axisLeft().scale(yScale));
+
+      /*
+      DRAW THE MARKS
+
+      */
+
+      const circle = svg.selectAll("circle")
+        .data(data)
+        .enter()
+        .append("circle")
+          .attr("cx", function(d) { return xScale(d.numcol); })
+          .attr("cy", function(d) { return yScale(d.production); })
+          .attr("r", 6)
+          .attr("fill",function(d) { return colorScale(d.region); });
+
+
+      /*
+      ADDING AXIS LABELS
+
+      */
+      svg.append("text")
+        .attr("class","axisLabel")
+        .attr("x", width/2)
+        .attr("y", height - 10)
+        .attr("text-anchor","middle")
+        .text("Number of Colonies");
+
+      svg.append("text")
+        .attr("class","axisLabel")
+        .attr("x", -height/2)
+        .attr("y", 50)
+        .attr("text-anchor","middle")
+        .attr("transform","rotate(-90)")
+        .text("Total Production (lbs)");
+
+    /*
+    FILTERING
+
+    */ 
+
+    d3.selectAll(".region--option").on("click", function() {
+
+      let isChecked = d3.select(this).property("checked");
+      let thisRegion = d3.select(this).property("value");
+
+      let selection = circle.filter(function(d) {
+          return d.region === thisRegion;
+      });
+
+      if (isChecked == true) {
+          selection.attr("opacity", 1);
+      } else {
+          selection.attr("opacity", 0);
+      }
+
+    });
+
+
+
+
+
+
+
+
+  </script>
+</body>
+</html>
